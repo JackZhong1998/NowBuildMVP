@@ -40,3 +40,12 @@ CREATE TRIGGER subscriptions_updated_at
 -- Index for fast lookups
 CREATE INDEX IF NOT EXISTS idx_subscriptions_user_id ON public.subscriptions(user_id);
 CREATE INDEX IF NOT EXISTS idx_subscriptions_stripe_sub_id ON public.subscriptions(stripe_subscription_id);
+
+CREATE TABLE IF NOT EXISTS public.stripe_events (
+  event_id TEXT PRIMARY KEY,
+  event_type TEXT NOT NULL,
+  processed_at TIMESTAMPTZ DEFAULT now()
+);
+ALTER TABLE public.stripe_events ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Service role can manage stripe events" ON public.stripe_events FOR ALL
+  USING (auth.role() = 'service_role');

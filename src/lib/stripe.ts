@@ -1,10 +1,13 @@
+import 'server-only';
 import Stripe from 'stripe';
 
-const key = process.env.STRIPE_SECRET_KEY || '';
-
-export const stripe = key
-  ? new Stripe(key, { apiVersion: '2025-02-24.acacia', typescript: true })
-  : (null as unknown as Stripe);
+let stripeClient: Stripe | undefined;
+export function getStripe() {
+  const key = process.env.STRIPE_SECRET_KEY?.trim();
+  if (!key) throw new Error('Stripe is not configured. Set STRIPE_SECRET_KEY.');
+  stripeClient ??= new Stripe(key, { apiVersion: '2025-02-24.acacia', typescript: true });
+  return stripeClient;
+}
 
 export const PLANS = {
   free: {

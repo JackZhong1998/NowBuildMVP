@@ -1,8 +1,8 @@
 {
   "Metadata": {
     "home": {
-      "title": "NowBuild — 构建和扩展您业务的现代化平台",
-      "description": "NowBuild 提供强大的工具来启动、管理和发展您的 SaaS 产品。开箱即用的认证、支付和分析功能，让您快速开始构建。"
+      "title": "NowBuild — 开源 Next.js SaaS 启动框架",
+      "description": "用集成 Clerk、Stripe、Supabase 与国际化的 Next.js SaaS 基础代码，更快完成从创意到可验证产品的第一步。"
     },
     "blog": {
       "title": "博客 — NowBuild 的洞察与更新",
@@ -34,23 +34,23 @@
     "getStarted": "免费开始"
   },
   "Hero": {
-    "badge": "公开测试中 — 免费体验",
-    "title": "构建和扩展您的 SaaS",
-    "titleHighlight": "快 10 倍",
-    "description": "集认证、支付、数据库和 SEO 于一体的全能框架。用天而非月来交付您的产品。",
-    "cta": "免费开始构建",
-    "secondaryCta": "查看在线演示",
-    "trustedBy": "受到以下团队的信赖",
-    "stat1Value": "10K+",
-    "stat1Label": "开发者",
-    "stat2Value": "99.9%",
-    "stat2Label": "正常运行",
-    "stat3Value": "50ms",
-    "stat3Label": "平均响应"
+    "badge": "开源 SaaS Starter · 持续迭代中",
+    "title": "把时间留给产品，",
+    "titleHighlight": "别再重复搭脚手架",
+    "description": "认证、订阅支付、数据库、双语路由与 SEO 基础已经接好。基于清晰的 Next.js 代码起步，按你的业务继续扩展。",
+    "cta": "开始搭建产品",
+    "secondaryCta": "查看代码与能力",
+    "trustedBy": "基于成熟的开发者工具构建",
+    "stat1Value": "6+",
+    "stat1Label": "核心能力",
+    "stat2Value": "2",
+    "stat2Label": "内置语言",
+    "stat3Value": "3 步",
+    "stat3Label": "完成本地启动"
   },
   "Features": {
-    "title": "为什么团队选择 NowBuild",
-    "subtitle": "对比 NowBuild 与从零开始构建或使用其他方案的差异。",
+    "title": "少做重复集成，更早验证产品",
+    "subtitle": "NowBuild 提供一套可读、可改、可部署的基础实现，帮你跳过常见的启动工作。",
     "table": {
       "feature": "功能",
       "nowbuild": "NowBuild",
@@ -83,14 +83,14 @@
       "deployDiy": "手动 CI/CD",
       "deployOthers": "因框架而异",
       "speed": "上线时间",
-      "speedSaas": "数天",
-      "speedDiy": "数月",
-      "speedOthers": "数周"
+      "speedSaas": "从可运行基础开始",
+      "speedDiy": "取决于集成范围",
+      "speedOthers": "因模板而异"
     }
   },
   "Highlights": {
-    "title": "交付所需的一切",
-    "subtitle": "为快速构建和自信扩展而设计的强大功能。",
+    "title": "常用 SaaS 基础，已经连在一起",
+    "subtitle": "不是黑盒平台，而是一套可以直接阅读、替换和扩展的应用代码。",
     "items": [
       {
         "title": "安全认证",
@@ -98,11 +98,11 @@
       },
       {
         "title": "Stripe 支付",
-        "description": "订阅、一次性支付、发票和 Webhook 处理。从第一天开始变现。"
+        "description": "包含订阅 Checkout、Webhook 状态同步与客户账单门户，覆盖核心订阅流程。"
       },
       {
         "title": "Supabase 数据库",
-        "description": "PostgreSQL 实时订阅、行级安全、自动生成 API 和类型安全查询。"
+        "description": "使用 Supabase PostgreSQL 保存订阅数据，并提供行级安全策略与数据库初始化脚本。"
       },
       {
         "title": "SEO 优化",
@@ -114,7 +114,7 @@
       },
       {
         "title": "一键部署",
-        "description": "针对 Vercel 优化，支持边缘函数、ISR、图片优化和自动 CI/CD 流水线。"
+        "description": "遵循标准 Next.js 项目结构，可部署到 Vercel 或其他兼容 Next.js 的运行环境。"
       }
     ]
   },
@@ -124,7 +124,7 @@
     "items": [
       {
         "question": "什么是 NowBuild？",
-        "answer": "NowBuild 是一个生产就绪的 SaaS 框架，基于 Next.js 构建，集成了认证（Clerk）、支付（Stripe）、数据库（Supabase）和完整的 SEO 优化。它旨在帮助您在数天而非数月内启动产品。"
+        "answer": "NowBuild 是一个开源 Next.js SaaS 启动框架，预先集成 Clerk、Stripe、Supabase、国际化与 SEO 基础。它提供可运行的起点，帮助你把精力集中在自己的业务功能上。"
       },
       {
         "question": "使用 NowBuild 需要了解 Next.js 吗？",
@@ -136,7 +136,7 @@
       },
       {
         "question": "NowBuild 适合生产环境使用吗？",
-        "answer": "是的。NowBuild 基于生产最佳实践构建，包括类型安全、安全标头、SEO 优化、错误处理和性能监控。它旨在与您的业务一起从 MVP 扩展到企业级。"
+        "answer": "NowBuild 提供类型检查、安全标头和经过验证的生产构建基础，但上线前仍需根据你的业务完成密钥配置、权限审查、支付测试、监控与合规检查。框架不会替代产品自身的生产验收。"
       },
       {
         "question": "多语言支持是如何工作的？",
@@ -149,7 +149,7 @@
     ]
   },
   "Footer": {
-    "description": "为快速交付的开发者打造的现代 SaaS 框架。",
+    "description": "一套清晰、可扩展的 Next.js SaaS 起步代码，让你更早开始构建真正不同的产品。",
     "product": "产品",
     "features": "功能",
     "pricing": "定价",
@@ -177,6 +177,8 @@
     "currentPlan": "当前方案",
     "getStarted": "免费开始",
     "subscribe": "立即订阅",
+    "processing": "正在前往安全支付…",
+    "checkoutError": "暂时无法创建支付会话，请稍后重试或前往工作台管理现有订阅。",
     "contactSales": "联系销售",
     "mostPopular": "最受欢迎",
     "plans": {
@@ -274,7 +276,7 @@
     },
     "mission": {
       "title": "我们的使命",
-      "content": "赋能全球开发者，提供他们所需的工具和框架，将创意在数天而非数月内转化为生产就绪的 SaaS 产品。"
+      "content": "为开发者提供可靠、易懂的基础，让 SaaS 创意更顺畅地变成真正有人使用的产品。"
     },
     "values": {
       "title": "我们的价值观",
@@ -282,13 +284,13 @@
         { "title": "开发者优先", "description": "我们做的每个决定都始于开发者体验。干净的 API、优秀的文档和合理的默认值。" },
         { "title": "快速交付", "description": "速度很重要。我们优化快速开发，同时不牺牲代码质量或安全性。" },
         { "title": "开放透明", "description": "我们的代码是开放的。我们的定价是清晰的。我们的路线图是公开的。没有意外。" },
-        { "title": "质量至上", "description": "我们注重细节 — 从类型安全到像素级完美的 UI 到全面的测试覆盖。" }
+        { "title": "质量至上", "description": "通过类型安全、自动检查、谨慎的默认配置和诚实的文档持续打磨基础。" }
       ]
     },
     "cta": {
       "title": "准备好开始构建了吗？",
-      "description": "加入数千名使用 NowBuild 更快交付的开发者。",
-      "button": "免费开始"
+      "description": "克隆代码、连接服务，然后把它变成属于你的产品。",
+      "button": "开始构建"
     }
   },
   "Privacy": {

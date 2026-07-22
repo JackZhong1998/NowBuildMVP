@@ -319,13 +319,16 @@ https://app.nowbuild.com/api/webhooks/stripe
 
 5. 在 **「Select events to listen to」**（选择要监听的事件）区域：
    - 点击 **「+ Select events」** 按钮
-   - 搜索并勾选以下 **3 个事件**：
+   - 搜索并勾选以下 **4 个事件**：
 
 | 事件名 | 含义 |
 |--------|------|
 | `checkout.session.completed` | 用户完成了支付 |
 | `customer.subscription.updated` | 用户的订阅状态有变化（续费、变更方案等） |
 | `customer.subscription.deleted` | 用户取消了订阅 |
+| `invoice.payment_failed` | 订阅续费付款失败 |
+
+请同时前往 Stripe Dashboard → Settings → Billing → Customer portal 启用并配置客户门户。工作台中的「管理订阅」按钮会打开这个 Stripe 托管页面。
 
 6. 点击 **「Add endpoint」** 完成创建
 7. 创建完成后，进入这个 Webhook 的详情页

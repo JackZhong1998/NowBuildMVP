@@ -1,8 +1,8 @@
 {
   "Metadata": {
     "home": {
-      "title": "NowBuild — The Modern Platform for Building & Scaling Your Business",
-      "description": "NowBuild provides powerful tools to launch, manage, and grow your SaaS product. Start building with authentication, payments, and analytics out of the box."
+      "title": "NowBuild — Open-source Next.js SaaS Starter",
+      "description": "Start from a working Next.js SaaS foundation with Clerk, Stripe, Supabase, internationalization, and SEO already connected."
     },
     "blog": {
       "title": "Blog — Insights & Updates from NowBuild",
@@ -34,23 +34,23 @@
     "getStarted": "Get Started"
   },
   "Hero": {
-    "badge": "Now in Public Beta — Try it Free",
-    "title": "Build & Scale Your SaaS",
-    "titleHighlight": "10x Faster",
-    "description": "The all-in-one framework with authentication, payments, database, and SEO baked in. Ship your product in days, not months.",
-    "cta": "Start Building for Free",
-    "secondaryCta": "View Live Demo",
-    "trustedBy": "Trusted by teams at",
-    "stat1Value": "10K+",
-    "stat1Label": "Developers",
-    "stat2Value": "99.9%",
-    "stat2Label": "Uptime",
-    "stat3Value": "50ms",
-    "stat3Label": "Avg Response"
+    "badge": "Open-source SaaS starter · Actively evolving",
+    "title": "Spend time on your product,",
+    "titleHighlight": "not boilerplate",
+    "description": "Authentication, subscription billing, database, localized routes, and SEO foundations are already connected in code you can read and extend.",
+    "cta": "Start Building",
+    "secondaryCta": "Explore the Foundation",
+    "trustedBy": "Built on proven developer tools",
+    "stat1Value": "6+",
+    "stat1Label": "Core Capabilities",
+    "stat2Value": "2",
+    "stat2Label": "Built-in Languages",
+    "stat3Value": "3 Steps",
+    "stat3Label": "To Run Locally"
   },
   "Features": {
-    "title": "Why Teams Choose NowBuild",
-    "subtitle": "Compare how NowBuild stacks up against building from scratch or using alternatives.",
+    "title": "Skip repeat integrations. Validate sooner.",
+    "subtitle": "NowBuild gives you a readable, adaptable foundation for the work nearly every SaaS product needs.",
     "table": {
       "feature": "Feature",
       "nowbuild": "NowBuild",
@@ -83,14 +83,14 @@
       "deployDiy": "Manual CI/CD",
       "deployOthers": "Varies",
       "speed": "Time to Launch",
-      "speedSaas": "Days",
-      "speedDiy": "Months",
-      "speedOthers": "Weeks"
+      "speedSaas": "Start from a working base",
+      "speedDiy": "Depends on scope",
+      "speedOthers": "Varies by starter"
     }
   },
   "Highlights": {
-    "title": "Everything You Need to Ship",
-    "subtitle": "Powerful features designed for developers who want to build fast and scale confidently.",
+    "title": "The SaaS foundation, already connected",
+    "subtitle": "Not a black-box platform—a conventional Next.js codebase you can inspect, replace, and extend.",
     "items": [
       {
         "title": "Secure Authentication",
@@ -98,11 +98,11 @@
       },
       {
         "title": "Stripe Payments",
-        "description": "Subscriptions, one-time payments, invoicing, and webhook handling. Start monetizing from day one."
+        "description": "Subscription Checkout, webhook state sync, and a customer billing portal cover the core subscription flow."
       },
       {
         "title": "Supabase Database",
-        "description": "PostgreSQL with real-time subscriptions, Row Level Security, auto-generated APIs, and type-safe queries."
+        "description": "Supabase PostgreSQL stores subscription data with a starter schema and Row Level Security policies."
       },
       {
         "title": "SEO Optimized",
@@ -114,7 +114,7 @@
       },
       {
         "title": "One-Click Deploy",
-        "description": "Optimized for Vercel with edge functions, ISR, image optimization, and automatic CI/CD pipelines."
+        "description": "A standard Next.js project structure that can run on Vercel or other compatible hosting environments."
       }
     ]
   },
@@ -124,7 +124,7 @@
     "items": [
       {
         "question": "What is NowBuild?",
-        "answer": "NowBuild is a production-ready SaaS framework built with Next.js, featuring integrated authentication (Clerk), payments (Stripe), database (Supabase), and full SEO optimization. It's designed to help you launch your product in days instead of months."
+        "answer": "NowBuild is an open-source Next.js SaaS starter with Clerk, Stripe, Supabase, internationalization, and SEO foundations already integrated. It gives you a working base so you can focus on your product-specific features."
       },
       {
         "question": "Do I need to know Next.js to use NowBuild?",
@@ -136,7 +136,7 @@
       },
       {
         "question": "Is NowBuild suitable for production use?",
-        "answer": "Yes. NowBuild is built with production best practices including type safety, security headers, SEO optimization, error handling, and performance monitoring. It's designed to scale with your business from MVP to enterprise."
+        "answer": "NowBuild includes a verified production build, type checks, and security-minded defaults. Before launch, you still need to configure credentials, review authorization, test billing, add monitoring, and complete the compliance work required by your product."
       },
       {
         "question": "How does the multi-language support work?",
@@ -149,7 +149,7 @@
     ]
   },
   "Footer": {
-    "description": "The modern SaaS framework for developers who ship fast.",
+    "description": "A clear, extensible Next.js SaaS foundation so you can start building what makes your product different.",
     "product": "Product",
     "features": "Features",
     "pricing": "Pricing",
@@ -177,6 +177,8 @@
     "currentPlan": "Current Plan",
     "getStarted": "Get Started",
     "subscribe": "Subscribe Now",
+    "processing": "Opening secure checkout…",
+    "checkoutError": "We couldn't start checkout. Try again, or manage an existing subscription from your dashboard.",
     "contactSales": "Contact Sales",
     "mostPopular": "Most Popular",
     "plans": {
@@ -274,7 +276,7 @@
     },
     "mission": {
       "title": "Our Mission",
-      "content": "To empower developers worldwide with the tools and framework they need to turn ideas into production-ready SaaS products — in days, not months."
+      "content": "To give developers a dependable, understandable foundation for turning SaaS ideas into products people can actually use."
     },
     "values": {
       "title": "Our Values",
@@ -282,13 +284,13 @@
         { "title": "Developer First", "description": "Every decision we make starts with the developer experience. Clean APIs, great docs, and sensible defaults." },
         { "title": "Ship Fast", "description": "Speed matters. We optimize for rapid development without sacrificing code quality or security." },
         { "title": "Open & Transparent", "description": "Our code is open. Our pricing is clear. Our roadmap is public. No surprises." },
-        { "title": "Quality Matters", "description": "We sweat the details — from type safety to pixel-perfect UI to comprehensive test coverage." }
+        { "title": "Quality Matters", "description": "We improve the foundation through type safety, automated checks, careful defaults, and honest documentation." }
       ]
     },
     "cta": {
       "title": "Ready to Start Building?",
-      "description": "Join thousands of developers who ship faster with NowBuild.",
-      "button": "Get Started for Free"
+      "description": "Clone the starter, connect your services, and make it your own.",
+      "button": "Start Building"
     }
   },
   "Privacy": {

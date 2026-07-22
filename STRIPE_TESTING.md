@@ -80,7 +80,7 @@ Ready! Your webhook signing secret is whsec_xxxxxxxxx
 **预期结果：**
 
 - Stripe CLI 终端能看到事件投递成功（2xx）
-- 事件至少包含：`checkout.session.completed`
+- 事件至少包含：`checkout.session.completed`、`customer.subscription.updated`、`customer.subscription.deleted`、`invoice.payment_failed`
 - Supabase `subscriptions` 表新增或更新当前用户记录，`status` 为 `active`
 
 ### 4.2 测试“3DS 验证”流程

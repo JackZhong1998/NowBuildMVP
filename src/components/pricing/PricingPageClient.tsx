@@ -4,13 +4,13 @@ import { useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/landing/Footer';
-import PricingModal from '@/components/PricingModal';
 
 export default function PricingPageClient() {
   const t = useTranslations('Pricing');
   const locale = useLocale();
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
-  const [modalOpen, setModalOpen] = useState(false);
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
   const plans = ['free', 'pro', 'enterprise'] as const;
 
@@ -20,6 +20,8 @@ export default function PricingPageClient() {
       window.location.href = 'mailto:sales@nowbuild.com';
       return;
     }
+    setLoadingPlan(plan);
+    setCheckoutError(null);
     try {
       const response = await fetch('/api/create-checkout-session', {
         method: 'POST',
@@ -30,6 +32,7 @@ export default function PricingPageClient() {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Checkout request failed:', response.status, errorText);
+        setCheckoutError(t('checkoutError'));
         return;
       }
 
@@ -37,6 +40,7 @@ export default function PricingPageClient() {
       if (!contentType.includes('application/json')) {
         const errorText = await response.text();
         console.error('Checkout response is not JSON:', errorText);
+        setCheckoutError(t('checkoutError'));
         return;
       }
 
@@ -46,6 +50,9 @@ export default function PricingPageClient() {
       }
     } catch (error) {
       console.error('Failed to create checkout session:', error);
+      setCheckoutError(t('checkoutError'));
+    } finally {
+      setLoadingPlan(null);
     }
   }
 
@@ -145,13 +152,14 @@ export default function PricingPageClient() {
 
                     <button
                       onClick={() => handleSubscribe(planKey)}
+                      disabled={loadingPlan !== null}
                       className={`w-full rounded-xl py-3 text-sm font-semibold transition-all ${
                         isPro
                           ? 'bg-primary-600 text-white shadow-sm hover:bg-primary-700 hover:shadow-md'
                           : 'border border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
                       }`}
                     >
-                      {planKey === 'free'
+                      {loadingPlan === planKey ? t('processing') : planKey === 'free'
                         ? t('getStarted')
                         : planKey === 'enterprise'
                         ? t('contactSales')
@@ -161,11 +169,11 @@ export default function PricingPageClient() {
                 );
               })}
             </div>
+            {checkoutError && <p role="alert" className="mx-auto mt-6 max-w-xl text-center text-sm text-red-600">{checkoutError}</p>}
           </div>
         </section>
       </main>
       <Footer />
-      <PricingModal isOpen={modalOpen} onClose={() => setModalOpen(false)} />
     </>
   );
 }

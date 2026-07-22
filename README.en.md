@@ -206,13 +206,16 @@ You need accounts on 3 platforms:
    ```
    https://yourdomain.com/api/webhooks/stripe
    ```
-3. Click **"+ Select events"** and check these 3 events:
+3. Click **"+ Select events"** and check these 4 events:
 
 | Event | What it means |
 |-------|---------------|
 | `checkout.session.completed` | User completed a payment |
 | `customer.subscription.updated` | Subscription status changed |
 | `customer.subscription.deleted` | Subscription was canceled |
+| `invoice.payment_failed` | A recurring payment failed |
+
+Enable and configure the **Customer Portal** in Stripe Dashboard → Settings → Billing → Customer portal. The dashboard's “Manage subscription” button uses this hosted portal.
 
 4. Click **"Add endpoint"**
 5. On the endpoint detail page, click **"Reveal"** next to **"Signing secret"**

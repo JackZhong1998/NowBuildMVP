@@ -2,6 +2,7 @@ import { auth } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 import { getServiceSupabase } from '@/lib/supabase';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import BillingPortalButton from '@/components/BillingPortalButton';
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -22,7 +23,7 @@ export default async function DashboardPage({ params, searchParams }: Props) {
   const supabase = getServiceSupabase();
   const { data } = await supabase
     .from('subscriptions')
-    .select('plan, status, current_period_end')
+    .select('plan, status, current_period_end, stripe_customer_id')
     .eq('user_id', userId)
     .maybeSingle();
 
@@ -69,6 +70,7 @@ export default async function DashboardPage({ params, searchParams }: Props) {
                 : 'N/A'}
           </p>
         </div>
+        {data?.stripe_customer_id && <BillingPortalButton locale={locale} />}
       </section>
 
       <a

@@ -5,18 +5,11 @@ const siteUrl = process.env.NEXT_PUBLIC_APP_URL && !process.env.NEXT_PUBLIC_APP_
 
 module.exports = {
   siteUrl,
-  generateRobotsTxt: true,
+  generateRobotsTxt: false,
   generateIndexSitemap: false,
   exclude: ['/api/*', '/sign-in*', '/sign-up*'],
   alternateRefs: [
     { href: `${siteUrl}/en`, hreflang: 'en' },
     { href: `${siteUrl}/zh`, hreflang: 'zh' },
   ],
-  robotsTxtOptions: {
-    policies: [
-      { userAgent: '*', allow: '/' },
-      { userAgent: '*', disallow: ['/api/', '/sign-in', '/sign-up'] },
-    ],
-    additionalSitemaps: [`${siteUrl}/sitemap.xml`],
-  },
 };
