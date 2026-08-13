@@ -6,7 +6,9 @@ import FeatureComparison from '@/components/landing/FeatureComparison';
 import FeatureHighlights from '@/components/landing/FeatureHighlights';
 import FAQ from '@/components/landing/FAQ';
 import Footer from '@/components/landing/Footer';
+import ProjectShowcase from '@/components/landing/ProjectShowcase';
 import { buildAbsoluteUrl, getBaseUrl, getSiteName } from '@/lib/seo';
+import { listExampleSessions } from '@/lib/nowbuild/project-store';
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -34,6 +36,7 @@ export default async function HomePage({ params }: Props) {
     question: t(`items.${i}.question`),
     answer: t(`items.${i}.answer`),
   }));
+  const examples = await listExampleSessions();
 
   const faqStructuredData = {
     '@context': 'https://schema.org',
@@ -86,6 +89,7 @@ export default async function HomePage({ params }: Props) {
       <Navbar />
       <main>
         <Hero />
+        <ProjectShowcase locale={locale} projects={examples} />
         <FeatureComparison />
         <FeatureHighlights />
         <FAQ />

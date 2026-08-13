@@ -1,0 +1,10 @@
+{
+  "id": "internal-ops",
+  "name": "企业内部工具 MVP 评测集",
+  "threshold": 85,
+  "cases": [
+    { "name": "OnboardFlow", "idea": "让新员工第一周不再遗漏关键事项", "audience": "50 人以内的创业团队", "coreFeature": "按角色生成入职清单并跟踪完成状态", "style": "scandinavian", "locale": "zh" },
+    { "name": "IncidentBrief", "idea": "把故障沟通变成清晰可追踪的时间线", "audience": "小型工程团队", "coreFeature": "记录事件、负责人、更新和复盘行动", "style": "linear-dark", "locale": "zh" },
+    { "name": "ApprovalDesk", "idea": "集中处理零散的内部审批请求", "audience": "快速成长的运营团队", "coreFeature": "提交请求并按负责人查看审批状态", "style": "notion-editorial", "locale": "zh" }
+  ]
+}

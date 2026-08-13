@@ -1,0 +1,10 @@
+{
+  "id": "creator-tools",
+  "name": "创作者工具 MVP 评测集",
+  "threshold": 85,
+  "cases": [
+    { "name": "ClipBrief", "idea": "把长视频转成可发布的短内容计划", "audience": "独立视频创作者", "coreFeature": "粘贴视频链接，生成带时间点的短视频脚本", "style": "linear-dark", "locale": "zh" },
+    { "name": "CourseSpark", "idea": "把专业知识快速变成迷你课程", "audience": "知识型创作者", "coreFeature": "输入主题，生成课程大纲、练习和销售页", "style": "notion-editorial", "locale": "zh" },
+    { "name": "SponsorKit", "idea": "让播客主更快完成商业合作", "audience": "小型播客团队", "coreFeature": "生成媒体包并跟踪品牌询盘", "style": "scandinavian", "locale": "zh" }
+  ]
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "NowBuild Page Design"
+  short_description: "Choose a style and create build-ready design rules"
+  default_prompt: "Use $nowbuild-design-system to choose a page style and produce an implementation-ready design spec."

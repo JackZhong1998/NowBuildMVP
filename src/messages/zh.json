@@ -1,8 +1,8 @@
 {
   "Metadata": {
     "home": {
-      "title": "NowBuild — 开源 Next.js SaaS 启动框架",
-      "description": "用集成 Clerk、Stripe、Supabase 与国际化的 Next.js SaaS 基础代码，更快完成从创意到可验证产品的第一步。"
+      "title": "NowBuild — 把软件想法变成可收费的 MVP",
+      "description": "用 AI Coding Agent 生成具备登录、支付、数据库、官网 SEO 和产品内页的全栈 SaaS MVP。"
     },
     "blog": {
       "title": "博客 — NowBuild 的洞察与更新",
@@ -34,19 +34,19 @@
     "getStarted": "免费开始"
   },
   "Hero": {
-    "badge": "开源 SaaS Starter · 持续迭代中",
-    "title": "把时间留给产品，",
-    "titleHighlight": "别再重复搭脚手架",
-    "description": "认证、订阅支付、数据库、双语路由与 SEO 基础已经接好。基于清晰的 Next.js 代码起步，按你的业务继续扩展。",
-    "cta": "开始搭建产品",
-    "secondaryCta": "查看代码与能力",
+    "badge": "Pi Agent 驱动 · 从想法到可上线 MVP",
+    "title": "描述你的软件想法，",
+    "titleHighlight": "今天就上线验证",
+    "description": "NowBuild 自动完成产品 PRD、页面设计、官网 SEO、核心功能开发和测试。登录、一次性付费与数据库从第一行代码就已就绪。",
+    "cta": "免费生成 MVP",
+    "secondaryCta": "看看如何工作",
     "trustedBy": "基于成熟的开发者工具构建",
-    "stat1Value": "6+",
-    "stat1Label": "核心能力",
-    "stat2Value": "2",
-    "stat2Label": "内置语言",
-    "stat3Value": "3 步",
-    "stat3Label": "完成本地启动"
+    "stat1Value": "30 分钟",
+    "stat1Label": "获得首个预览",
+    "stat2Value": "8",
+    "stat2Label": "内置 Agent Skills",
+    "stat3Value": "按量",
+    "stat3Label": "透明 Credits 计费"
   },
   "Features": {
     "title": "少做重复集成，更早验证产品",

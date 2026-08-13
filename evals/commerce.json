@@ -1,0 +1,10 @@
+{
+  "id": "commerce",
+  "name": "商业化产品 MVP 评测集",
+  "threshold": 85,
+  "cases": [
+    { "name": "WaitlistPay", "idea": "在正式开发前验证用户是否愿意付费", "audience": "准备发布新产品的创业者", "coreFeature": "创建带预购支付的候补名单页面", "style": "linear-dark", "locale": "zh" },
+    { "name": "PreorderBoard", "idea": "为小品牌提供简单透明的预售管理", "audience": "独立消费品牌", "coreFeature": "发布预售商品并查看订单进度", "style": "notion-editorial", "locale": "zh" },
+    { "name": "LocalMenu", "idea": "让社区餐厅不用平台抽成也能在线接单", "audience": "单店餐厅经营者", "coreFeature": "编辑菜单、接受订单并展示取餐状态", "style": "scandinavian", "locale": "zh" }
+  ]
+}

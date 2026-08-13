@@ -1,8 +1,8 @@
 {
   "Metadata": {
     "home": {
-      "title": "NowBuild — Open-source Next.js SaaS Starter",
-      "description": "Start from a working Next.js SaaS foundation with Clerk, Stripe, Supabase, internationalization, and SEO already connected."
+      "title": "NowBuild — Turn a software idea into a paid MVP",
+      "description": "Use an AI coding agent to generate a full-stack SaaS MVP with auth, payments, database, SEO landing pages, and product UI."
     },
     "blog": {
       "title": "Blog — Insights & Updates from NowBuild",
@@ -34,19 +34,19 @@
     "getStarted": "Get Started"
   },
   "Hero": {
-    "badge": "Open-source SaaS starter · Actively evolving",
-    "title": "Spend time on your product,",
-    "titleHighlight": "not boilerplate",
-    "description": "Authentication, subscription billing, database, localized routes, and SEO foundations are already connected in code you can read and extend.",
-    "cta": "Start Building",
-    "secondaryCta": "Explore the Foundation",
+    "badge": "Powered by Pi Agent · Idea to deployed MVP",
+    "title": "Describe your software idea.",
+    "titleHighlight": "Validate it today.",
+    "description": "NowBuild creates the PRD, visual system, SEO site, core product and tests. Authentication, one-time payments and database are ready from the first line of code.",
+    "cta": "Generate my MVP",
+    "secondaryCta": "See how it works",
     "trustedBy": "Built on proven developer tools",
-    "stat1Value": "6+",
-    "stat1Label": "Core Capabilities",
-    "stat2Value": "2",
-    "stat2Label": "Built-in Languages",
-    "stat3Value": "3 Steps",
-    "stat3Label": "To Run Locally"
+    "stat1Value": "30 min",
+    "stat1Label": "To first preview",
+    "stat2Value": "8",
+    "stat2Label": "Built-in agent skills",
+    "stat3Value": "Usage",
+    "stat3Label": "Transparent credit billing"
   },
   "Features": {
     "title": "Skip repeat integrations. Validate sooner.",

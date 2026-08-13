@@ -1,0 +1,4 @@
+interface:
+  display_name: "NowBuild Style Library"
+  short_description: "Browse and implement extensible product-ready visual systems"
+  default_prompt: "Choose a suitable NowBuild style profile and turn it into implementation-ready design rules."

@@ -1,0 +1,15 @@
+{
+  "id": "personal-sites",
+  "name": "个人网站与作品集",
+  "threshold": 85,
+  "cases": [
+    { "name": "MiraCreates", "idea": "把插画作品、合作案例和个人性格放进一个让品牌方记住的主页", "audience": "寻找商业合作的独立插画师", "coreFeature": "浏览精选作品并提交带预算范围的合作询盘", "style": "creator-collage", "locale": "zh" },
+    { "name": "LinDesign", "idea": "用编辑部式案例叙事呈现产品设计判断，而不只是摆放最终界面", "audience": "寻找高级产品设计岗位的设计师", "coreFeature": "按问题、过程和结果阅读案例并预约作品集沟通", "style": "portfolio-editorial", "locale": "zh" },
+    { "name": "NoirFrames", "idea": "让导演和品牌在第一屏就感受到摄影师的影像风格", "audience": "商业摄影师与短片导演", "coreFeature": "沉浸浏览代表作品并提交拍摄档期需求", "style": "cinematic-photo", "locale": "zh" },
+    { "name": "MayaGrowth", "idea": "用真实方法论和案例证据帮助独立顾问获得高质量预约", "audience": "服务早期 SaaS 的增长顾问", "coreFeature": "查看咨询方法、案例结果并预约一次诊断通话", "style": "consultant-proof", "locale": "zh" },
+    { "name": "KaiShips", "idea": "用发布记录、代码项目和产品数据证明独立开发者真正做成过什么", "audience": "寻找合作者和早期客户的独立开发者", "coreFeature": "按时间线浏览产品发布并订阅新的构建日志", "style": "developer-terminal", "locale": "zh" },
+    { "name": "YunLetters", "idea": "把文章、播客和书摘整理成一个安静但有辨识度的个人刊物", "audience": "希望沉淀长期读者的作者与播客主", "coreFeature": "按主题阅读作品并订阅每月一封长信", "style": "writer-journal", "locale": "zh" },
+    { "name": "DrChenLab", "idea": "让研究成果、论文、演讲和媒体报道更容易被同行与合作方理解", "audience": "跨学科研究者与科学传播者", "coreFeature": "按研究主题检索成果并发起合作邀请", "style": "academic-folio", "locale": "zh" },
+    { "name": "ZoePoster", "idea": "用大胆的海报式个人主页让时尚内容策划从同质化简历中跳出来", "audience": "寻找品牌项目的时尚内容策划", "coreFeature": "浏览视觉企划、服务套餐并提交品牌合作 Brief", "style": "canva-anti-design", "locale": "zh" }
+  ]
+}

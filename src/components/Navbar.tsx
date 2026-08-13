@@ -18,7 +18,7 @@ function AuthButtons({ signInLabel, getStartedLabel }: { signInLabel: string; ge
         <Link href="/sign-in" className="rounded-lg px-3.5 py-2 text-sm font-medium text-gray-600 transition-colors hover:text-gray-900">
           {signInLabel}
         </Link>
-        <Link href="/sign-up" className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-primary-700 hover:shadow-md">
+        <Link href="/dashboard" className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-primary-700 hover:shadow-md">
           {getStartedLabel}
         </Link>
       </>

@@ -1,0 +1,4 @@
+interface:
+  display_name: "NowBuild Product PRD"
+  short_description: "Turn a product idea into a scoped and tested MVP"
+  default_prompt: "Use $nowbuild-product-prd to turn a product idea into a scoped PRD and tested implementation."

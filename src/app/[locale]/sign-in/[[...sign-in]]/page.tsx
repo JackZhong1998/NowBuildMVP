@@ -4,6 +4,7 @@ import { setRequestLocale } from 'next-intl/server';
 
 type Props = {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ redirect_url?: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -26,13 +27,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function SignInPage({ params }: Props) {
+export default async function SignInPage({ params, searchParams }: Props) {
   const { locale } = await params;
+  const query = await searchParams;
+  const requested = String(query.redirect_url || '');
+  const redirectUrl = requested.startsWith(`/${locale}/`) ? requested : `/${locale}/dashboard`;
   setRequestLocale(locale);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-surface px-4">
       <SignIn
+        forceRedirectUrl={redirectUrl}
         appearance={{
           elements: {
             rootBox: 'mx-auto',

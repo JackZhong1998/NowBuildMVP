@@ -26,6 +26,9 @@ yarn-error.log*
 # local env files
 .env
 .env*.local
+test-results/
+playwright-report/
+coverage/
 
 # vercel
 .vercel

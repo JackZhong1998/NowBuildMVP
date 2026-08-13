@@ -1,0 +1,4 @@
+interface:
+  display_name: "NowBuild Managed AI"
+  short_description: "Build metered multimodal AI features without exposing keys"
+  default_prompt: "Use $nowbuild-managed-ai to implement this AI product through the NowBuild managed gateway."

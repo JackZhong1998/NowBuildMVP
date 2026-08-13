@@ -1,0 +1,697 @@
+{
+  "methodology": "repository-build-v2",
+  "generatedAt": "2026-08-12T09:51:10.079Z",
+  "summary": {
+    "sets": 3,
+    "cases": 9,
+    "passed": 9,
+    "averageScore": 100,
+    "totalBuildSeconds": 73
+  },
+  "sets": [
+    {
+      "id": "creator-tools",
+      "name": "创作者工具 MVP 评测集",
+      "threshold": 85,
+      "score": 100,
+      "passed": true,
+      "cases": [
+        {
+          "name": "ClipBrief",
+          "idea": "把长视频转成可发布的短内容计划",
+          "audience": "独立视频创作者",
+          "coreFeature": "粘贴视频链接，生成带时间点的短视频脚本",
+          "style": "signal",
+          "locale": "zh",
+          "score": 100,
+          "criteria": [
+            {
+              "label": "真实 SaaS Kit 工作区",
+              "weight": 10,
+              "passed": true,
+              "evidence": "package.json + supabase/schema.sql"
+            },
+            {
+              "label": "独立生产构建通过",
+              "weight": 20,
+              "passed": true,
+              "evidence": "npm run build + .next/BUILD_ID"
+            },
+            {
+              "label": "完整公开站路由",
+              "weight": 10,
+              "passed": true,
+              "evidence": "Next app-paths manifest"
+            },
+            {
+              "label": "登录与注册路由",
+              "weight": 10,
+              "passed": true,
+              "evidence": "Clerk routes in build manifest"
+            },
+            {
+              "label": "产品工作区路由",
+              "weight": 10,
+              "passed": true,
+              "evidence": "dashboard route + interactive client"
+            },
+            {
+              "label": "核心业务功能落入代码",
+              "weight": 15,
+              "passed": true,
+              "evidence": "generated ProductWorkspace.tsx"
+            },
+            {
+              "label": "官网匹配品牌与用户",
+              "weight": 10,
+              "passed": true,
+              "evidence": "generated localized homepage"
+            },
+            {
+              "label": "支付与 Webhook 保留",
+              "weight": 5,
+              "passed": true,
+              "evidence": "Stripe API routes"
+            },
+            {
+              "label": "SEO 与国际化保留",
+              "weight": 5,
+              "passed": true,
+              "evidence": "metadata + foundation manifest"
+            },
+            {
+              "label": "响应式产品体验",
+              "weight": 5,
+              "passed": true,
+              "evidence": "responsive Tailwind breakpoints"
+            }
+          ],
+          "passed": true,
+          "durationMs": 11144
+        },
+        {
+          "name": "CourseSpark",
+          "idea": "把专业知识快速变成迷你课程",
+          "audience": "知识型创作者",
+          "coreFeature": "输入主题，生成课程大纲、练习和销售页",
+          "style": "editorial",
+          "locale": "zh",
+          "score": 100,
+          "criteria": [
+            {
+              "label": "真实 SaaS Kit 工作区",
+              "weight": 10,
+              "passed": true,
+              "evidence": "package.json + supabase/schema.sql"
+            },
+            {
+              "label": "独立生产构建通过",
+              "weight": 20,
+              "passed": true,
+              "evidence": "npm run build + .next/BUILD_ID"
+            },
+            {
+              "label": "完整公开站路由",
+              "weight": 10,
+              "passed": true,
+              "evidence": "Next app-paths manifest"
+            },
+            {
+              "label": "登录与注册路由",
+              "weight": 10,
+              "passed": true,
+              "evidence": "Clerk routes in build manifest"
+            },
+            {
+              "label": "产品工作区路由",
+              "weight": 10,
+              "passed": true,
+              "evidence": "dashboard route + interactive client"
+            },
+            {
+              "label": "核心业务功能落入代码",
+              "weight": 15,
+              "passed": true,
+              "evidence": "generated ProductWorkspace.tsx"
+            },
+            {
+              "label": "官网匹配品牌与用户",
+              "weight": 10,
+              "passed": true,
+              "evidence": "generated localized homepage"
+            },
+            {
+              "label": "支付与 Webhook 保留",
+              "weight": 5,
+              "passed": true,
+              "evidence": "Stripe API routes"
+            },
+            {
+              "label": "SEO 与国际化保留",
+              "weight": 5,
+              "passed": true,
+              "evidence": "metadata + foundation manifest"
+            },
+            {
+              "label": "响应式产品体验",
+              "weight": 5,
+              "passed": true,
+              "evidence": "responsive Tailwind breakpoints"
+            }
+          ],
+          "passed": true,
+          "durationMs": 8849
+        },
+        {
+          "name": "SponsorKit",
+          "idea": "让播客主更快完成商业合作",
+          "audience": "小型播客团队",
+          "coreFeature": "生成媒体包并跟踪品牌询盘",
+          "style": "soft",
+          "locale": "zh",
+          "score": 100,
+          "criteria": [
+            {
+              "label": "真实 SaaS Kit 工作区",
+              "weight": 10,
+              "passed": true,
+              "evidence": "package.json + supabase/schema.sql"
+            },
+            {
+              "label": "独立生产构建通过",
+              "weight": 20,
+              "passed": true,
+              "evidence": "npm run build + .next/BUILD_ID"
+            },
+            {
+              "label": "完整公开站路由",
+              "weight": 10,
+              "passed": true,
+              "evidence": "Next app-paths manifest"
+            },
+            {
+              "label": "登录与注册路由",
+              "weight": 10,
+              "passed": true,
+              "evidence": "Clerk routes in build manifest"
+            },
+            {
+              "label": "产品工作区路由",
+              "weight": 10,
+              "passed": true,
+              "evidence": "dashboard route + interactive client"
+            },
+            {
+              "label": "核心业务功能落入代码",
+              "weight": 15,
+              "passed": true,
+              "evidence": "generated ProductWorkspace.tsx"
+            },
+            {
+              "label": "官网匹配品牌与用户",
+              "weight": 10,
+              "passed": true,
+              "evidence": "generated localized homepage"
+            },
+            {
+              "label": "支付与 Webhook 保留",
+              "weight": 5,
+              "passed": true,
+              "evidence": "Stripe API routes"
+            },
+            {
+              "label": "SEO 与国际化保留",
+              "weight": 5,
+              "passed": true,
+              "evidence": "metadata + foundation manifest"
+            },
+            {
+              "label": "响应式产品体验",
+              "weight": 5,
+              "passed": true,
+              "evidence": "responsive Tailwind breakpoints"
+            }
+          ],
+          "passed": true,
+          "durationMs": 8355
+        }
+      ]
+    },
+    {
+      "id": "commerce",
+      "name": "商业化产品 MVP 评测集",
+      "threshold": 85,
+      "score": 100,
+      "passed": true,
+      "cases": [
+        {
+          "name": "WaitlistPay",
+          "idea": "在正式开发前验证用户是否愿意付费",
+          "audience": "准备发布新产品的创业者",
+          "coreFeature": "创建带预购支付的候补名单页面",
+          "style": "signal",
+          "locale": "zh",
+          "score": 100,
+          "criteria": [
+            {
+              "label": "真实 SaaS Kit 工作区",
+              "weight": 10,
+              "passed": true,
+              "evidence": "package.json + supabase/schema.sql"
+            },
+            {
+              "label": "独立生产构建通过",
+              "weight": 20,
+              "passed": true,
+              "evidence": "npm run build + .next/BUILD_ID"
+            },
+            {
+              "label": "完整公开站路由",
+              "weight": 10,
+              "passed": true,
+              "evidence": "Next app-paths manifest"
+            },
+            {
+              "label": "登录与注册路由",
+              "weight": 10,
+              "passed": true,
+              "evidence": "Clerk routes in build manifest"
+            },
+            {
+              "label": "产品工作区路由",
+              "weight": 10,
+              "passed": true,
+              "evidence": "dashboard route + interactive client"
+            },
+            {
+              "label": "核心业务功能落入代码",
+              "weight": 15,
+              "passed": true,
+              "evidence": "generated ProductWorkspace.tsx"
+            },
+            {
+              "label": "官网匹配品牌与用户",
+              "weight": 10,
+              "passed": true,
+              "evidence": "generated localized homepage"
+            },
+            {
+              "label": "支付与 Webhook 保留",
+              "weight": 5,
+              "passed": true,
+              "evidence": "Stripe API routes"
+            },
+            {
+              "label": "SEO 与国际化保留",
+              "weight": 5,
+              "passed": true,
+              "evidence": "metadata + foundation manifest"
+            },
+            {
+              "label": "响应式产品体验",
+              "weight": 5,
+              "passed": true,
+              "evidence": "responsive Tailwind breakpoints"
+            }
+          ],
+          "passed": true,
+          "durationMs": 8009
+        },
+        {
+          "name": "PreorderBoard",
+          "idea": "为小品牌提供简单透明的预售管理",
+          "audience": "独立消费品牌",
+          "coreFeature": "发布预售商品并查看订单进度",
+          "style": "editorial",
+          "locale": "zh",
+          "score": 100,
+          "criteria": [
+            {
+              "label": "真实 SaaS Kit 工作区",
+              "weight": 10,
+              "passed": true,
+              "evidence": "package.json + supabase/schema.sql"
+            },
+            {
+              "label": "独立生产构建通过",
+              "weight": 20,
+              "passed": true,
+              "evidence": "npm run build + .next/BUILD_ID"
+            },
+            {
+              "label": "完整公开站路由",
+              "weight": 10,
+              "passed": true,
+              "evidence": "Next app-paths manifest"
+            },
+            {
+              "label": "登录与注册路由",
+              "weight": 10,
+              "passed": true,
+              "evidence": "Clerk routes in build manifest"
+            },
+            {
+              "label": "产品工作区路由",
+              "weight": 10,
+              "passed": true,
+              "evidence": "dashboard route + interactive client"
+            },
+            {
+              "label": "核心业务功能落入代码",
+              "weight": 15,
+              "passed": true,
+              "evidence": "generated ProductWorkspace.tsx"
+            },
+            {
+              "label": "官网匹配品牌与用户",
+              "weight": 10,
+              "passed": true,
+              "evidence": "generated localized homepage"
+            },
+            {
+              "label": "支付与 Webhook 保留",
+              "weight": 5,
+              "passed": true,
+              "evidence": "Stripe API routes"
+            },
+            {
+              "label": "SEO 与国际化保留",
+              "weight": 5,
+              "passed": true,
+              "evidence": "metadata + foundation manifest"
+            },
+            {
+              "label": "响应式产品体验",
+              "weight": 5,
+              "passed": true,
+              "evidence": "responsive Tailwind breakpoints"
+            }
+          ],
+          "passed": true,
+          "durationMs": 7406
+        },
+        {
+          "name": "LocalMenu",
+          "idea": "让社区餐厅不用平台抽成也能在线接单",
+          "audience": "单店餐厅经营者",
+          "coreFeature": "编辑菜单、接受订单并展示取餐状态",
+          "style": "soft",
+          "locale": "zh",
+          "score": 100,
+          "criteria": [
+            {
+              "label": "真实 SaaS Kit 工作区",
+              "weight": 10,
+              "passed": true,
+              "evidence": "package.json + supabase/schema.sql"
+            },
+            {
+              "label": "独立生产构建通过",
+              "weight": 20,
+              "passed": true,
+              "evidence": "npm run build + .next/BUILD_ID"
+            },
+            {
+              "label": "完整公开站路由",
+              "weight": 10,
+              "passed": true,
+              "evidence": "Next app-paths manifest"
+            },
+            {
+              "label": "登录与注册路由",
+              "weight": 10,
+              "passed": true,
+              "evidence": "Clerk routes in build manifest"
+            },
+            {
+              "label": "产品工作区路由",
+              "weight": 10,
+              "passed": true,
+              "evidence": "dashboard route + interactive client"
+            },
+            {
+              "label": "核心业务功能落入代码",
+              "weight": 15,
+              "passed": true,
+              "evidence": "generated ProductWorkspace.tsx"
+            },
+            {
+              "label": "官网匹配品牌与用户",
+              "weight": 10,
+              "passed": true,
+              "evidence": "generated localized homepage"
+            },
+            {
+              "label": "支付与 Webhook 保留",
+              "weight": 5,
+              "passed": true,
+              "evidence": "Stripe API routes"
+            },
+            {
+              "label": "SEO 与国际化保留",
+              "weight": 5,
+              "passed": true,
+              "evidence": "metadata + foundation manifest"
+            },
+            {
+              "label": "响应式产品体验",
+              "weight": 5,
+              "passed": true,
+              "evidence": "responsive Tailwind breakpoints"
+            }
+          ],
+          "passed": true,
+          "durationMs": 9968
+        }
+      ]
+    },
+    {
+      "id": "internal-ops",
+      "name": "企业内部工具 MVP 评测集",
+      "threshold": 85,
+      "score": 100,
+      "passed": true,
+      "cases": [
+        {
+          "name": "OnboardFlow",
+          "idea": "让新员工第一周不再遗漏关键事项",
+          "audience": "50 人以内的创业团队",
+          "coreFeature": "按角色生成入职清单并跟踪完成状态",
+          "style": "soft",
+          "locale": "zh",
+          "score": 100,
+          "criteria": [
+            {
+              "label": "真实 SaaS Kit 工作区",
+              "weight": 10,
+              "passed": true,
+              "evidence": "package.json + supabase/schema.sql"
+            },
+            {
+              "label": "独立生产构建通过",
+              "weight": 20,
+              "passed": true,
+              "evidence": "npm run build + .next/BUILD_ID"
+            },
+            {
+              "label": "完整公开站路由",
+              "weight": 10,
+              "passed": true,
+              "evidence": "Next app-paths manifest"
+            },
+            {
+              "label": "登录与注册路由",
+              "weight": 10,
+              "passed": true,
+              "evidence": "Clerk routes in build manifest"
+            },
+            {
+              "label": "产品工作区路由",
+              "weight": 10,
+              "passed": true,
+              "evidence": "dashboard route + interactive client"
+            },
+            {
+              "label": "核心业务功能落入代码",
+              "weight": 15,
+              "passed": true,
+              "evidence": "generated ProductWorkspace.tsx"
+            },
+            {
+              "label": "官网匹配品牌与用户",
+              "weight": 10,
+              "passed": true,
+              "evidence": "generated localized homepage"
+            },
+            {
+              "label": "支付与 Webhook 保留",
+              "weight": 5,
+              "passed": true,
+              "evidence": "Stripe API routes"
+            },
+            {
+              "label": "SEO 与国际化保留",
+              "weight": 5,
+              "passed": true,
+              "evidence": "metadata + foundation manifest"
+            },
+            {
+              "label": "响应式产品体验",
+              "weight": 5,
+              "passed": true,
+              "evidence": "responsive Tailwind breakpoints"
+            }
+          ],
+          "passed": true,
+          "durationMs": 5673
+        },
+        {
+          "name": "IncidentBrief",
+          "idea": "把故障沟通变成清晰可追踪的时间线",
+          "audience": "小型工程团队",
+          "coreFeature": "记录事件、负责人、更新和复盘行动",
+          "style": "signal",
+          "locale": "zh",
+          "score": 100,
+          "criteria": [
+            {
+              "label": "真实 SaaS Kit 工作区",
+              "weight": 10,
+              "passed": true,
+              "evidence": "package.json + supabase/schema.sql"
+            },
+            {
+              "label": "独立生产构建通过",
+              "weight": 20,
+              "passed": true,
+              "evidence": "npm run build + .next/BUILD_ID"
+            },
+            {
+              "label": "完整公开站路由",
+              "weight": 10,
+              "passed": true,
+              "evidence": "Next app-paths manifest"
+            },
+            {
+              "label": "登录与注册路由",
+              "weight": 10,
+              "passed": true,
+              "evidence": "Clerk routes in build manifest"
+            },
+            {
+              "label": "产品工作区路由",
+              "weight": 10,
+              "passed": true,
+              "evidence": "dashboard route + interactive client"
+            },
+            {
+              "label": "核心业务功能落入代码",
+              "weight": 15,
+              "passed": true,
+              "evidence": "generated ProductWorkspace.tsx"
+            },
+            {
+              "label": "官网匹配品牌与用户",
+              "weight": 10,
+              "passed": true,
+              "evidence": "generated localized homepage"
+            },
+            {
+              "label": "支付与 Webhook 保留",
+              "weight": 5,
+              "passed": true,
+              "evidence": "Stripe API routes"
+            },
+            {
+              "label": "SEO 与国际化保留",
+              "weight": 5,
+              "passed": true,
+              "evidence": "metadata + foundation manifest"
+            },
+            {
+              "label": "响应式产品体验",
+              "weight": 5,
+              "passed": true,
+              "evidence": "responsive Tailwind breakpoints"
+            }
+          ],
+          "passed": true,
+          "durationMs": 6706
+        },
+        {
+          "name": "ApprovalDesk",
+          "idea": "集中处理零散的内部审批请求",
+          "audience": "快速成长的运营团队",
+          "coreFeature": "提交请求并按负责人查看审批状态",
+          "style": "editorial",
+          "locale": "zh",
+          "score": 100,
+          "criteria": [
+            {
+              "label": "真实 SaaS Kit 工作区",
+              "weight": 10,
+              "passed": true,
+              "evidence": "package.json + supabase/schema.sql"
+            },
+            {
+              "label": "独立生产构建通过",
+              "weight": 20,
+              "passed": true,
+              "evidence": "npm run build + .next/BUILD_ID"
+            },
+            {
+              "label": "完整公开站路由",
+              "weight": 10,
+              "passed": true,
+              "evidence": "Next app-paths manifest"
+            },
+            {
+              "label": "登录与注册路由",
+              "weight": 10,
+              "passed": true,
+              "evidence": "Clerk routes in build manifest"
+            },
+            {
+              "label": "产品工作区路由",
+              "weight": 10,
+              "passed": true,
+              "evidence": "dashboard route + interactive client"
+            },
+            {
+              "label": "核心业务功能落入代码",
+              "weight": 15,
+              "passed": true,
+              "evidence": "generated ProductWorkspace.tsx"
+            },
+            {
+              "label": "官网匹配品牌与用户",
+              "weight": 10,
+              "passed": true,
+              "evidence": "generated localized homepage"
+            },
+            {
+              "label": "支付与 Webhook 保留",
+              "weight": 5,
+              "passed": true,
+              "evidence": "Stripe API routes"
+            },
+            {
+              "label": "SEO 与国际化保留",
+              "weight": 5,
+              "passed": true,
+              "evidence": "metadata + foundation manifest"
+            },
+            {
+              "label": "响应式产品体验",
+              "weight": 5,
+              "passed": true,
+              "evidence": "responsive Tailwind breakpoints"
+            }
+          ],
+          "passed": true,
+          "durationMs": 6684
+        }
+      ]
+    }
+  ]
+}

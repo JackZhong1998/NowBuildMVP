@@ -1,0 +1,4 @@
+interface:
+  display_name: "NowBuild SEO Copy"
+  short_description: "Create conversion-focused, search-ready website copy"
+  default_prompt: "Use $nowbuild-seo-copy to create conversion-focused SEO website copy."
