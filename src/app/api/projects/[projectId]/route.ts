@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getNowBuildUserId } from '@/lib/nowbuild/auth';
 import { getProjectSession, updateProjectSession } from '@/lib/nowbuild/project-store';
 import { planProject } from '@/lib/nowbuild/project-planner';
-import type { ProjectPlan } from '@/lib/nowbuild/types';
+import type { ProjectLaunchState, ProjectPlan, ProjectTestingState } from '@/lib/nowbuild/types';
 
 export const runtime = 'nodejs';
 export const maxDuration = 120;
@@ -20,8 +20,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ pr
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const { projectId } = await params;
   try {
-    const body = await request.json() as { plan?: ProjectPlan; title?: string };
-    const project = await updateProjectSession(projectId, userId, { plan: body.plan, title: body.title });
+    const body = await request.json() as { plan?: ProjectPlan; title?: string; testing?: ProjectTestingState; launch?: ProjectLaunchState };
+    const update: { plan?: ProjectPlan; title?: string; testing?: ProjectTestingState; launch?: ProjectLaunchState } = {};
+    if ('plan' in body) update.plan = body.plan;
+    if ('title' in body) update.title = body.title;
+    if ('testing' in body) update.testing = body.testing;
+    if ('launch' in body) update.launch = body.launch;
+    const project = await updateProjectSession(projectId, userId, update);
     return NextResponse.json(project);
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : 'Update failed' }, { status: 400 });

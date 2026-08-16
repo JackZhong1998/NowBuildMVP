@@ -1,12 +1,25 @@
 'use client';
 
 import { FormEvent, useEffect, useRef, useState } from 'react';
-import type { ProjectPlan, ProjectSession, StyleId } from '@/lib/nowbuild/types';
+import type { ProjectLaunchState, ProjectPlan, ProjectSession, ProjectTestingState, ProjectTestItem, StyleId } from '@/lib/nowbuild/types';
 import { styleCatalog, styleCatalogById, type StyleProfile } from '@/lib/nowbuild/style-catalog';
+import { advanceProjectTest, createProjectTestingState, reportProjectTestIssue, startProjectTesting } from '@/lib/nowbuild/project-testing';
 import EnvironmentDialog from './EnvironmentDialog';
 import ProjectHistoryDrawer from './ProjectHistoryDrawer';
+import ReleaseCenter, { type EnvironmentReadiness } from './ReleaseCenter';
+import ProjectResourceDrawer from './resources/ProjectResourceDrawer';
+import IssueReportDialog, { type TestIssueContext } from './testing/IssueReportDialog';
+import ProductTestingPanel from './testing/ProductTestingPanel';
 
 type StudioView = 'preview' | 'code' | 'deploy' | 'errors';
+type EnvironmentGroup = 'login' | 'database' | 'payments' | 'ai' | 'mcp' | 'deploy';
+type EnvironmentStatus = EnvironmentReadiness & {
+  fields: Array<{ key: string; configured: boolean; masked: string }>;
+  configuredCount: number;
+  loginReady: boolean;
+  databaseReady: boolean;
+  aiReady: boolean;
+};
 
 function StylePreview({ style }: { style: StyleProfile }) {
   const { theme, preview } = style;
@@ -54,6 +67,10 @@ export default function NowBuildStudio({ locale, initialPrompt, initialProjectId
   const [error, setError] = useState('');
   const [historyOpen, setHistoryOpen] = useState(false);
   const [environmentOpen, setEnvironmentOpen] = useState(false);
+  const [environmentGroup, setEnvironmentGroup] = useState<EnvironmentGroup>('login');
+  const [environmentStatus, setEnvironmentStatus] = useState<EnvironmentStatus | null>(null);
+  const [resourcesOpen, setResourcesOpen] = useState(false);
+  const [issueItem, setIssueItem] = useState<ProjectTestItem | null>(null);
   const [previewRevision, setPreviewRevision] = useState(0);
   const started = useRef(false);
   const conversationEnd = useRef<HTMLDivElement>(null);
@@ -71,6 +88,13 @@ export default function NowBuildStudio({ locale, initialPrompt, initialProjectId
     const pane = conversationScroll.current;
     if (pane) pane.scrollTo({ top: pane.scrollHeight, behavior: 'smooth' });
   }, [project?.messages.length, busy]);
+  useEffect(() => {
+    if (!project?.id) { setEnvironmentStatus(null); return; }
+    fetch(`/api/projects/${project.id}/environment`)
+      .then((response) => response.ok ? response.json() : null)
+      .then((next: EnvironmentStatus | null) => setEnvironmentStatus(next))
+      .catch(() => setEnvironmentStatus(null));
+  }, [project?.id, project?.result]);
   useEffect(() => {
     if (!project?.id || project.status !== 'building') return;
     const id = project.id;
@@ -91,7 +115,10 @@ export default function NowBuildStudio({ locale, initialPrompt, initialProjectId
       const response = await fetch(`/api/projects/${id}`);
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Project not found');
-      setProject(data); setPlan(data.plan || null); setPendingPrompt('');
+      const next = data.status === 'built' && data.plan && !data.testing
+        ? { ...data, testing: createProjectTestingState(data.plan) }
+        : data;
+      setProject(next); setPlan(next.plan || null); setPendingPrompt('');
     } catch (cause) { setError(cause instanceof Error ? cause.message : 'Unable to load project'); }
     finally { setBusy(false); }
   }
@@ -121,14 +148,14 @@ export default function NowBuildStudio({ locale, initialPrompt, initialProjectId
     setPlan({ ...plan, brief: { ...plan.brief, style }, design: { rationale: selected.note, palette: [...selected.palette], typography: selected.typography, layout: selected.principles.join(' · '), motion: selected.motion } });
   }
 
-  async function build(instruction = '') {
+  async function build(instruction = '', intent: 'change' | 'bug-fix' = 'change') {
     if (!project || !plan || project.isExample) return;
     setBusy(true); setError(''); setView('preview');
-    setProject({ ...project, plan, status: 'building', messages: instruction ? [...project.messages, { id: `pending-${Date.now()}`, role: 'user', kind: 'prompt', content: instruction, createdAt: new Date().toISOString() }] : project.messages });
+    setProject((current) => current ? { ...current, plan, status: 'building', messages: instruction ? [...current.messages, { id: `pending-${Date.now()}`, role: 'user', kind: 'prompt', content: instruction, createdAt: new Date().toISOString() }] : current.messages } : current);
     try {
       const saved = await fetch(`/api/projects/${project.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ plan, title: plan.brief.name }) });
       if (!saved.ok) throw new Error((await saved.json()).error || 'Unable to save plan');
-      const response = await fetch(`/api/projects/${project.id}/build`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ instruction }) });
+      const response = await fetch(`/api/projects/${project.id}/build`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ instruction, intent }) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Build failed');
       setProject(data.project); setPlan(data.project.plan); setBalance(data.balance); setMessage(''); setPreviewRevision((value) => value + 1);
@@ -158,6 +185,59 @@ export default function NowBuildStudio({ locale, initialPrompt, initialProjectId
     finally { setPublishing(false); }
   }
 
+  async function updateTesting(testing: ProjectTestingState) {
+    if (!project) return;
+    setProject((current) => current ? { ...current, testing } : current);
+    if (project.isExample) return;
+    try {
+      const response = await fetch(`/api/projects/${project.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ testing }) });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Unable to save testing progress');
+      setProject((current) => current && current.id === data.id ? { ...current, testing: data.testing } : current);
+    } catch (cause) { setError(cause instanceof Error ? cause.message : 'Unable to save testing progress'); }
+  }
+
+  async function updateLaunch(launch: ProjectLaunchState) {
+    if (!project || project.isExample) return;
+    setProject((current) => current ? { ...current, launch } : current);
+    try {
+      const response = await fetch(`/api/projects/${project.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ launch }) });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Unable to save launch progress');
+      setProject((current) => current && current.id === data.id ? { ...current, launch: data.launch } : current);
+    } catch (cause) { setError(cause instanceof Error ? cause.message : 'Unable to save launch progress'); }
+  }
+
+  function openConfiguration(provider: 'supabase' | 'stripe' | 'vercel' | EnvironmentGroup) {
+    setEnvironmentGroup(provider === 'supabase' ? 'login' : provider === 'stripe' ? 'payments' : provider === 'vercel' ? 'deploy' : provider);
+    setEnvironmentOpen(true);
+  }
+
+  function selectTest(itemId: string) {
+    if (!project?.testing) return;
+    const now = new Date().toISOString();
+    const next: ProjectTestingState = {
+      ...project.testing,
+      status: project.testing.items.find((item) => item.id === itemId)?.status === 'needs-retest' ? 'retest' : 'testing',
+      activeItemId: itemId,
+      items: project.testing.items.map((item) => item.id === itemId
+        ? { ...item, status: item.status === 'pending' ? 'current' : item.status }
+        : item.status === 'current' ? { ...item, status: 'pending' } : item),
+      updatedAt: now,
+    };
+    void updateTesting(next);
+  }
+
+  async function submitTestIssue(issue: TestIssueContext) {
+    if (!project?.testing) return;
+    const issueText = `${issue.expected}${issue.observed ? `；实际：${issue.observed}` : ''}`;
+    const next = reportProjectTestIssue(project.testing, issue.itemId, issueText);
+    setIssueItem(null);
+    await updateTesting(next);
+    const instruction = `测试问题报告\n- 当前测试步骤：${issue.step}\n- 当前预览路径：${issue.previewPath}\n- 用户期望：${issue.expected}\n- 实际表现：${issue.observed || '用户未补充；请结合运行日志和页面行为复现'}\n\n请先复现并定位根因，只修改与这个问题相关的代码；修复后重新运行静态检查、生产构建和关键页面测试。`;
+    await build(instruction, 'bug-fix');
+  }
+
   async function refinePlan() {
     if (!project || project.status !== 'ready' || !message.trim()) return;
     const answer = message.trim();
@@ -182,13 +262,15 @@ export default function NowBuildStudio({ locale, initialPrompt, initialProjectId
   const files = project?.result?.files.filter((file) => !file.includes('.next') && !file.includes('node_modules')) || [];
   const previewSrc = project?.result ? `/p/${project.id}/${locale}` : `/${locale}`;
   const previewAddress = project?.result ? `${project.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'product'}.preview.nowbuild.app` : 'nowbuild.app';
+  const testing = project?.testing || (project?.status === 'built' && plan ? createProjectTestingState(plan) : null);
 
   return <main className="flex min-h-screen w-full min-w-0 flex-col overflow-x-hidden bg-[#ececea] text-[#171816]">
     <header className="flex min-h-14 shrink-0 flex-wrap items-center justify-between gap-2 border-b border-black/8 bg-white px-3 py-2 sm:flex-nowrap sm:gap-3 sm:px-5">
-      <div className="flex min-w-0 items-center gap-2"><button onClick={() => setHistoryOpen(true)} aria-label="打开历史对话" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#171816] text-sm font-black text-white">N</button><button onClick={() => setHistoryOpen(true)} aria-label="查看历史对话" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-black/8 bg-white text-base">☰</button><div className="min-w-0"><div className="truncate text-sm font-bold">{project?.title || (zh ? '新产品' : 'New product')}</div><div className="text-[10px] text-black/35">{project?.status === 'built' ? (zh ? '已通过构建与测试' : 'Build and tests passed') : project?.status === 'building' ? (zh ? '正在开发' : 'Building') : (zh ? '方案阶段' : 'Planning')}</div></div></div>
+      <div className="flex min-w-0 items-center gap-2"><button onClick={() => setHistoryOpen(true)} aria-label="打开历史对话" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#171816] text-sm font-black text-white">N</button><button onClick={() => setHistoryOpen(true)} aria-label="查看历史对话" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-black/8 bg-white text-base">☰</button><div className="min-w-0"><div className="truncate text-sm font-bold">{project?.title || (zh ? '新产品' : 'New product')}</div><div className="text-[10px] text-black/35">{project?.status === 'built' ? testing?.status === 'passed' ? (zh ? '核心流程已验收' : 'Core flow accepted') : (zh ? '预览已就绪，等待测试' : 'Preview ready for testing') : project?.status === 'building' ? testing?.status === 'fixing' ? (zh ? 'Agent 正在修复问题' : 'Agent is fixing an issue') : (zh ? '正在开发' : 'Building') : (zh ? '方案阶段' : 'Planning')}</div></div></div>
       <div className="flex w-full min-w-0 items-center gap-1 overflow-x-auto sm:w-auto">
         {(Object.keys(viewCopy) as StudioView[]).map((item) => <button key={item} onClick={() => setView(item)} className={`shrink-0 rounded-lg px-3 py-2 text-xs font-bold ${view === item ? 'bg-[#efedff] text-[#5b4bd9]' : 'text-black/42 hover:bg-black/[.04]'}`}>{viewCopy[item][zh ? 0 : 1]}{item === 'errors' && project?.lastError ? <span className="ml-1 text-red-500">●</span> : null}</button>)}
-        <button onClick={() => setEnvironmentOpen(true)} disabled={!project || project.isExample} className="ml-1 shrink-0 rounded-lg border border-black/8 px-3 py-2 text-xs font-bold text-black/55 disabled:opacity-30">⚙ {zh ? '配置' : 'Settings'}</button>
+        <button onClick={() => setResourcesOpen(true)} disabled={!project || project.isExample} className="ml-1 shrink-0 rounded-lg border border-black/8 px-3 py-2 text-xs font-bold text-black/55 disabled:opacity-30">＋ {zh ? '能力与素材' : 'Resources'}</button>
+        <button onClick={() => openConfiguration('login')} disabled={!project || project.isExample} className="shrink-0 rounded-lg border border-black/8 px-3 py-2 text-xs font-bold text-black/55 disabled:opacity-30">⚙ {zh ? '配置' : 'Settings'}</button>
         <div className="hidden shrink-0 rounded-lg border border-black/8 px-3 py-2 text-[11px] font-bold sm:block">{balance} credits</div>
         {project?.status === 'built' && <a href={`/p/${project.id}/${locale}`} target="_blank" className="shrink-0 rounded-lg bg-[#6d5dfc] px-3 py-2 text-[11px] font-bold text-white">{zh ? '打开产品 ↗' : 'Open app ↗'}</a>}
       </div>
@@ -197,6 +279,19 @@ export default function NowBuildStudio({ locale, initialPrompt, initialProjectId
     <div className="grid w-full min-w-0 flex-1 lg:min-h-0 lg:grid-cols-[400px_1fr]">
       <aside className="flex min-h-[680px] w-full min-w-0 flex-col border-r border-black/8 bg-[#fbfbfa] lg:h-[calc(100vh-3.5rem)]">
         <div className="flex items-center justify-between border-b border-black/6 px-5 py-3"><div className="flex rounded-lg bg-black/[.045] p-1 text-[11px] font-bold"><span className={`rounded-md px-3 py-1.5 ${project?.status === 'building' || project?.status === 'built' ? 'text-black/35' : 'bg-white shadow-sm'}`}>Plan</span><span className={`rounded-md px-3 py-1.5 ${project?.status === 'building' || project?.status === 'built' ? 'bg-white shadow-sm' : 'text-black/35'}`}>Build</span></div><button onClick={() => setHistoryOpen(true)} className="text-[10px] font-semibold text-black/40 hover:text-black">{zh ? '历史与进度 →' : 'History & progress →'}</button></div>
+        {project?.status === 'built' && testing && !project.isExample && <ProductTestingPanel
+          testing={testing}
+          readiness={{ supabaseReady: Boolean(environmentStatus?.supabaseReady), paymentsReady: Boolean(environmentStatus?.paymentsReady) }}
+          locale={locale}
+          busy={busy}
+          onStart={() => void updateTesting(startProjectTesting(testing))}
+          onSelect={selectTest}
+          onPass={(itemId) => void updateTesting(advanceProjectTest(testing, itemId, 'passed'))}
+          onSkip={(itemId) => void updateTesting(advanceProjectTest(testing, itemId, 'skipped'))}
+          onIssue={setIssueItem}
+          onConfigure={(provider) => openConfiguration(provider)}
+          onPublish={() => setView('deploy')}
+        />}
         <div ref={conversationScroll} className="flex-1 space-y-5 overflow-y-auto px-4 py-5">
           {!project && !pendingPrompt && <div className="rounded-2xl rounded-tl-sm border border-[#7767ef]/15 bg-[#efedff] p-4 text-sm leading-6 text-[#4439a3]"><div className="mb-2 font-bold">{zh ? '不用填表，像和产品合伙人聊天' : 'No forms—talk to a product partner'}</div><p>{zh ? '用一句话说清 5 件事；缺少关键信息时，我一次只追问一个问题。' : 'Describe five things in one sentence. I ask one question at a time only when a key decision is missing.'}</p><div className="mt-3 rounded-xl bg-white/75 p-3 text-xs leading-5 text-[#4439a3]/75">{zh ? '我想做【什么产品】，给【哪类用户】，在【什么场景】解决【什么痛点】，第一版要验证【什么结果】。' : 'I want to build [product] for [users], solving [pain] in [context], and validate [result] in v1.'}</div><div className="mt-3 flex flex-wrap gap-1.5 text-[10px] font-bold"><span className="rounded-full bg-white/70 px-2 py-1">目标用户</span><span className="rounded-full bg-white/70 px-2 py-1">痛点场景</span><span className="rounded-full bg-white/70 px-2 py-1">核心动作</span><span className="rounded-full bg-white/70 px-2 py-1">验证结果</span></div></div>}
           {pendingPrompt && !project && <><div className="ml-8 rounded-2xl rounded-tr-sm bg-[#171816] p-4 text-sm leading-6 text-white"><div className="mb-2 text-[10px] font-bold uppercase tracking-[.14em] opacity-45">You</div>{pendingPrompt}</div><div role="status" className="mr-3 rounded-2xl rounded-tl-sm border border-black/7 bg-white p-4"><div className="flex items-center gap-3"><span className="h-4 w-4 animate-spin rounded-full border-2 border-black/10 border-t-[#6d5dfc]"/><div><div className="text-sm font-bold">{zh ? '正在整理你的产品方案' : 'Preparing your product plan'}</div><div className="mt-1 text-[11px] text-black/40">{zh ? '正在生成 PRD、设计方向和官网文案…' : 'Creating the PRD, design direction, and website copy…'}</div></div></div><div className="mt-4 space-y-2"><div className="h-2 w-11/12 animate-pulse rounded bg-black/[.06]"/><div className="h-2 w-8/12 animate-pulse rounded bg-black/[.06]"/></div></div></>}
@@ -235,23 +330,46 @@ export default function NowBuildStudio({ locale, initialPrompt, initialProjectId
 
         {view === 'code' && <div className="grid h-full min-h-[720px] overflow-hidden rounded-2xl border border-black/10 bg-[#111315] text-white md:grid-cols-[260px_1fr]"><aside className="overflow-auto border-r border-white/8 p-3"><div className="mb-3 px-2 text-[10px] font-bold uppercase tracking-[.15em] text-white/35">Product source /</div>{files.length ? files.map((file) => <button key={file} onClick={() => void openFile(file)} className={`block w-full truncate rounded-md px-2 py-1.5 text-left font-mono text-[10px] ${selectedFile === file ? 'bg-[#6d5dfc] text-white' : 'text-white/55 hover:bg-white/5'}`}>◇ {file}</button>) : <p className="px-2 text-xs leading-5 text-white/30">{zh ? '产品完成首次构建后，真实源码会显示在这里。' : 'Real source files appear after the first successful build.'}</p>}</aside><div className="min-w-0 overflow-auto"><div className="sticky top-0 border-b border-white/8 bg-[#17191c] px-4 py-3 font-mono text-[10px] text-white/40">{selectedFile || (zh ? '选择左侧文件查看真实源码' : 'Choose a source file')}</div><pre className="min-w-max p-5 font-mono text-[11px] leading-6 text-[#d8e2c4]"><code>{fileContent || '// Select a file'}</code></pre></div></div>}
 
-        {view === 'deploy' && <div className="h-full min-h-[720px] overflow-auto rounded-2xl bg-[#f7f7f4] p-5 sm:p-8"><div className="mx-auto max-w-4xl"><div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div><div className="text-xs font-bold uppercase tracking-[.15em] text-[#6d5dfc]">Release center</div><h2 className="mt-2 text-3xl font-black tracking-[-.04em]">{zh ? '从预览到正式网址' : 'From preview to production'}</h2><p className="mt-3 max-w-xl text-sm leading-6 text-black/45">{zh ? 'NowBuild 可以直接把源码上传到 Vercel，不强制先创建 GitHub 仓库。需要长期维护时，再连接 GitHub 获得每次提交自动部署。' : 'NowBuild can deploy source directly to Vercel. GitHub is optional and recommended later for continuous deployment.'}</p></div>{project?.deployment?.status === 'ready' ? <span className="rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-bold text-emerald-700">● LIVE</span> : project?.result ? <span className="rounded-full bg-blue-100 px-3 py-1.5 text-xs font-bold text-blue-700">● PREVIEW READY</span> : <span className="rounded-full bg-black/5 px-3 py-1.5 text-xs font-bold text-black/35">NOT BUILT</span>}</div>
-          {project?.deployment?.url && <a href={project.deployment.url} target="_blank" className="mt-7 flex items-center justify-between rounded-2xl border border-emerald-200 bg-emerald-50 p-5"><div><div className="text-[10px] font-bold uppercase tracking-[.14em] text-emerald-700">Production URL</div><div className="mt-2 text-sm font-bold text-emerald-950">{project.deployment.url}</div></div><span className="text-emerald-700">访问 ↗</span></a>}
-          <div className="mt-7 grid gap-3 sm:grid-cols-4">{[
-            ['01', '配置服务', '登录、数据库、支付与 AI Key'],
-            ['02', '连接 Vercel', 'OAuth 正式版；当前支持加密 Token'],
-            ['03', '创建部署', '上传源码、同步变量并等待构建'],
-            ['04', '绑定域名', '配置 Clerk 域名与 Stripe Webhook'],
-          ].map(([number, title, note], index) => <div key={number} className="rounded-2xl border border-black/8 bg-white p-4"><div className={`text-xs font-black ${project?.deployment?.status === 'ready' || (index === 0 && project?.result) ? 'text-emerald-600' : 'text-[#6d5dfc]'}`}>{project?.deployment?.status === 'ready' ? '✓' : number}</div><div className="mt-7 text-sm font-bold">{title}</div><p className="mt-2 text-[10px] leading-4 text-black/40">{note}</p></div>)}</div>
-          <div className="mt-5 grid gap-4 sm:grid-cols-2"><div className="rounded-2xl border border-black/8 bg-white p-5"><div className="text-sm font-bold">{zh ? '直接发布（推荐首发）' : 'Direct publish'}</div><p className="mt-2 text-xs leading-5 text-black/45">{zh ? '不依赖 GitHub。NowBuild 通过 Vercel API 上传当前验证通过的源码，创建生产部署，并同步项目环境变量。' : 'Uploads the validated source through the Vercel API and syncs project environment variables.'}</p><div className="mt-4 flex gap-2"><button onClick={() => setEnvironmentOpen(true)} disabled={!project || project.isExample} className="rounded-lg border border-black/10 px-3 py-2 text-xs font-bold disabled:opacity-30">⚙ 配置服务</button><button onClick={() => void publish()} disabled={!project?.result || project.isExample || publishing} className="rounded-lg bg-[#171816] px-3 py-2 text-xs font-bold text-white disabled:opacity-30">{publishing ? '正在发布…' : '发布到 Vercel →'}</button></div></div><div className="rounded-2xl border border-black/8 bg-white p-5"><div className="text-sm font-bold">{zh ? '连接 GitHub（持续交付）' : 'Connect GitHub'}</div><p className="mt-2 text-xs leading-5 text-black/45">{zh ? '适合正式运营：导出独立仓库，Vercel 连接 main 分支；以后每次修改都生成 Preview，确认后再进入 Production。' : 'Export a repository and let Vercel deploy every branch and production commit.'}</p><button disabled className="mt-4 rounded-lg bg-black/[.06] px-3 py-2 text-xs font-bold text-black/35">{zh ? 'GitHub App 下一阶段接入' : 'GitHub App coming next'}</button></div></div>
-          {project?.deployment?.error && <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-xs text-red-700">{project.deployment.error}</div>}
-        </div></div>}
+        {view === 'deploy' && <ReleaseCenter
+          locale={locale}
+          project={project}
+          testing={testing}
+          environment={environmentStatus}
+          launch={project?.launch || null}
+          publishing={publishing}
+          onConfigure={(provider) => openConfiguration(provider)}
+          onReturnToTesting={() => setView('preview')}
+          onPublish={() => void publish()}
+          onLaunchChange={(next) => void updateLaunch(next)}
+        />}
 
-        {view === 'errors' && <div className="h-full min-h-[720px] overflow-auto rounded-2xl bg-[#111315] p-5 font-mono text-[11px] leading-6 text-white/65"><div className="flex items-center justify-between border-b border-white/8 pb-4"><div><div className="font-sans text-sm font-bold text-white">{zh ? '构建、测试与问题记录' : 'Build, test, and issue log'}</div><div className="mt-1 font-sans text-[10px] text-white/30">Secrets and external service output are redacted</div></div><span className={`rounded-full px-2 py-1 text-[10px] font-bold ${project?.lastError ? 'bg-red-500/15 text-red-300' : 'bg-emerald-500/15 text-emerald-300'}`}>{project?.lastError ? 'NEEDS ATTENTION' : project?.result ? 'NO ISSUES' : 'NOT RUN'}</span></div>{project?.lastError && <div className="mt-4 rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-red-300">× {project.lastError}</div>}<div className="mt-4">{project?.result?.logs.map((log, index) => <div key={`${log}-${index}`}><span className="mr-3 text-white/20">{String(index + 1).padStart(2, '0')}</span>{visibleMessage(log)}</div>) || <div className="text-white/25">{zh ? '产品开始开发后，这里会显示文件修改、检查、构建和页面测试记录。' : 'Build and test records appear after development starts.'}</div>}</div>{project?.lastError && !project.isExample && <button onClick={() => void build('请分析上一次构建错误，修复根因并重新完成所有测试。')} className="mt-6 rounded-lg bg-white px-4 py-2 font-sans text-xs font-bold text-black">{zh ? '自动修复并重试' : 'Fix and retry'}</button>}</div>}
+        {view === 'errors' && <div className="h-full min-h-[720px] overflow-auto rounded-2xl bg-[#111315] p-5 font-mono text-[11px] leading-6 text-white/65"><div className="flex items-center justify-between border-b border-white/8 pb-4"><div><div className="font-sans text-sm font-bold text-white">{zh ? '构建、测试与问题记录' : 'Build, test, and issue log'}</div><div className="mt-1 font-sans text-[10px] text-white/30">Secrets and external service output are redacted</div></div><span className={`rounded-full px-2 py-1 text-[10px] font-bold ${project?.lastError ? 'bg-red-500/15 text-red-300' : 'bg-emerald-500/15 text-emerald-300'}`}>{project?.lastError ? 'NEEDS ATTENTION' : project?.result ? 'NO BUILD ERRORS' : 'NOT RUN'}</span></div>{project?.lastError && <div className="mt-4 rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-red-300">× {project.lastError}</div>}<div className="mt-4">{project?.result?.logs.map((log, index) => <div key={`${log}-${index}`}><span className="mr-3 text-white/20">{String(index + 1).padStart(2, '0')}</span>{visibleMessage(log)}</div>) || <div className="text-white/25">{zh ? '产品开始开发后，这里会显示文件修改、检查、构建和页面测试记录。' : 'Build and test records appear after development starts.'}</div>}</div>{project?.lastError && !project.isExample && <button onClick={() => void build('请分析上一次构建错误，复现问题，修复根因并重新完成静态检查、生产构建和关键页面测试。', 'bug-fix')} className="mt-6 rounded-lg bg-white px-4 py-2 font-sans text-xs font-bold text-black">{zh ? '让 Agent 修复并重试' : 'Ask agent to fix and retry'}</button>}</div>}
       </section>
     </div>
 
     <ProjectHistoryDrawer open={historyOpen} locale={locale} activeId={project?.id} onClose={() => setHistoryOpen(false)}/>
-    {project && <EnvironmentDialog projectId={project.id} built={Boolean(project.result)} open={environmentOpen} onClose={() => setEnvironmentOpen(false)} onApplied={() => { void loadProject(project.id); setPreviewRevision((value) => value + 1); }}/>}
+    {project && plan && <ProjectResourceDrawer open={resourcesOpen} projectId={project.id} locale={locale} plan={plan} onPlanChange={setPlan} onClose={() => setResourcesOpen(false)} onApplied={() => undefined}/>}
+    {project && (
+      <EnvironmentDialog
+        projectId={project.id}
+        built={Boolean(project.result)}
+        open={environmentOpen}
+        initialGroup={environmentGroup}
+        onClose={() => setEnvironmentOpen(false)}
+        onStatusChange={setEnvironmentStatus}
+        onApplied={() => {
+          void loadProject(project.id);
+          setPreviewRevision((value) => value + 1);
+        }}
+      />
+    )}
+    <IssueReportDialog
+      open={Boolean(issueItem)}
+      step={issueItem ? { id: issueItem.id, label: issueItem.label } : null}
+      previewPath={previewSrc}
+      locale={locale}
+      onClose={() => setIssueItem(null)}
+      onSubmit={(issue) => void submitTestIssue(issue)}
+    />
   </main>;
 }

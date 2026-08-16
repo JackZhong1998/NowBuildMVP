@@ -19,7 +19,7 @@
 
 | 要做的事 | 我们用了什么 | 你要花的时间 |
 |---------|------------|------------|
-| 用户登录/注册 | Clerk | 已集成，0 小时 |
+| 用户登录/注册 | Supabase Auth | 已集成，0 小时 |
 | 在线收费（订阅制） | Stripe | 已集成，0 小时 |
 | 数据分析 | Google Analytics | 已集成，0 小时 |
 | 数据库 | Supabase | 已集成，0 小时 |
@@ -38,7 +38,7 @@
 | 前端框架 | Next.js 15 | React 全栈框架，支持服务端渲染 |
 | 语言 | TypeScript | 类型安全，减少 bug |
 | 样式 | Tailwind CSS 4 | 原子化 CSS，快速写样式 |
-| 认证 | Clerk | 用户登录、注册、社交登录 |
+| 认证 | Supabase Auth | 邮箱登录、注册、会话校验 |
 | 支付 | Stripe | 全球最主流的在线支付平台 |
 | 数据库 | Supabase | 基于 PostgreSQL 的云数据库 |
 | 多语言 | next-intl | 国际化框架，支持任意语言 |
@@ -57,7 +57,7 @@
 | 🔒 隐私协议 | `/privacy` | 完整隐私政策范文（中英双语） |
 | 📜 用户协议 | `/terms` | 完整服务条款范文（中英双语） |
 | 👤 关于我们 | `/about` | 团队故事 + 价值观 |
-| 🔑 登录/注册 | `/sign-in` `/sign-up` | Clerk 认证页面 |
+| 🔑 登录/注册 | `/sign-in` `/sign-up` | Supabase Auth 认证页面 |
 
 ---
 
@@ -125,7 +125,7 @@ npm run dev
 
 | 平台 | 用途 | 注册地址 |
 |------|------|---------|
-| Clerk | 用户登录/注册 | https://clerk.com |
+| Supabase | 用户认证与数据库 | https://supabase.com |
 | Stripe | 在线支付/收款 | https://stripe.com |
 | Supabase | 数据库存储 | https://supabase.com |
 | Google Analytics | 用户行为分析 | https://analytics.google.com |
@@ -133,9 +133,9 @@ npm run dev
 打开你的 `.env.local` 文件，你会看到类似这样的内容：
 
 ```env
-# Clerk Authentication
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_xxxxx
-CLERK_SECRET_KEY=sk_test_xxxxx
+# Supabase Auth + Database
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxxxx
+SUPABASE_SERVICE_ROLE_KEY=eyxxxxx
 
 # Stripe Payments
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_xxxxx
@@ -146,7 +146,7 @@ NEXT_PUBLIC_STRIPE_YEARLY_PRICE_ID=price_xxxxx
 
 # Supabase Database
 NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyxxxxx
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=eyxxxxx
 SUPABASE_SERVICE_ROLE_KEY=eyxxxxx
 
 # Google Analytics
@@ -161,45 +161,26 @@ NEXT_PUBLIC_APP_NAME=NowBuild
 
 ---
 
-### 📌 第一步：配置 Clerk（用户认证）
+### 📌 第一步：配置 Supabase Auth（用户认证）
 
-> Clerk 负责你网站的用户登录、注册功能。你需要获取 **2 个密钥**。
+> 认证和数据库共用一个 Supabase 项目，减少一套第三方账号与用户 ID 映射。
 
 #### 需要获取的值
 
 | 变量名 | 说明 |
 |--------|------|
-| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | 公开密钥（可以暴露在前端） |
-| `CLERK_SECRET_KEY` | 私密密钥（只能在服务器端使用） |
+| `NEXT_PUBLIC_SUPABASE_URL` | 项目 URL（可以暴露在前端） |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Publishable key（可以暴露在前端） |
+| `SUPABASE_SERVICE_ROLE_KEY` | 服务端数据库密钥（绝不能暴露到前端） |
 
 #### 操作步骤
 
-**1. 注册 Clerk 账号**
+1. 在 https://supabase.com 创建项目。
+2. 打开 **Project Settings → API Keys**，复制 Project URL、Publishable key 和 service role key。
+3. 在 **Authentication → URL Configuration** 中加入本地和生产站点 URL，并允许 `/auth/confirm` 回调。
+4. 把这些值填入 `.env.local`。生成项目已经包含邮箱注册、邮件确认、登录、退出与受保护路由。
 
-- 打开 https://clerk.com
-- 点击右上角 **「Sign Up」** 按钮
-- 可以用 GitHub、Google 或邮箱注册
-
-**2. 创建一个 Application（应用）**
-
-- 登录后，你会看到 Dashboard（仪表盘）
-- 点击 **「+ Create application」** 按钮
-- 填写应用名称，比如输入 `NowBuild`
-- 在 **「Sign in options」** 里勾选你想支持的登录方式（推荐勾选 Email 和 Google）
-- 点击 **「Create application」**
-
-**3. 复制密钥**
-
-创建完成后，Clerk 会直接展示你的两个密钥：
-
-- 页面上会显示一段代码示例，里面包含：
-  - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_xxxxxx...`
-  - `CLERK_SECRET_KEY=sk_test_xxxxxx...`
-- 将这两个值复制，粘贴到你的 `.env.local` 文件中对应的位置
-
-> 💡 **找不到密钥？** 在 Clerk Dashboard 左侧菜单点击 **「API Keys」**，就能看到。
-
-> ⚠️ **安全提醒**：`CLERK_SECRET_KEY` 是私密密钥，**绝对不要**公开发布到 GitHub 或分享给别人。`.env.local` 文件已经被加入了 `.gitignore`，不会被 Git 追踪。
+> ⚠️ **安全提醒**：`SUPABASE_SERVICE_ROLE_KEY` 拥有高权限，只能在服务端使用，绝对不要以 `NEXT_PUBLIC_` 开头或提交到 Git。
 
 ---
 
@@ -419,7 +400,7 @@ stripe listen --forward-to localhost:3000/api/webhooks/stripe
 | 变量名 | 说明 |
 |--------|------|
 | `NEXT_PUBLIC_SUPABASE_URL` | 项目的 API 地址 |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | 匿名公开密钥（可用于前端） |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Publishable key（可用于前端） |
 | `SUPABASE_SERVICE_ROLE_KEY` | 服务端密钥（拥有完全权限） |
 
 #### 操作步骤
@@ -447,7 +428,7 @@ stripe listen --forward-to localhost:3000/api/webhooks/stripe
 | 信息 | 位置 | 复制到 |
 |------|------|--------|
 | **Project URL** | 页面顶部 `URL` 区域 | `NEXT_PUBLIC_SUPABASE_URL` |
-| **anon public** | `Project API Keys` 区域第一个 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` |
+| **publishable** | `Project API Keys` 区域第一个 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` |
 | **service_role secret** | `Project API Keys` 区域第二个（点击眼睛图标显示） | `SUPABASE_SERVICE_ROLE_KEY` |
 
 > ⚠️ **安全提醒**：`service_role` 密钥拥有绕过 Row Level Security（行级安全）的完全权限，**绝对不要**在前端代码中使用它。它只应在服务器端（API Routes）中使用。
@@ -531,11 +512,11 @@ stripe listen --forward-to localhost:3000/api/webhooks/stripe
 全部配置完成后，你的 `.env.local` 应该长这样（把下面的示例值替换成你的真实值）：
 
 ```env
-# ========== Clerk 认证 ==========
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_abc123...
-CLERK_SECRET_KEY=sk_test_xyz789...
-NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
-NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
+# ========== Supabase Auth + Database ==========
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxxxx
+SUPABASE_SERVICE_ROLE_KEY=eyJxxxxx
+
 
 # ========== Stripe 支付 ==========
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_51Abc...
@@ -546,7 +527,7 @@ NEXT_PUBLIC_STRIPE_YEARLY_PRICE_ID=price_1VwXyZaBcD...
 
 # ========== Supabase 数据库 ==========
 NEXT_PUBLIC_SUPABASE_URL=https://abcdefgh.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOi...
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=eyJhbGciOi...
 SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOi...
 
 # ========== Google Analytics ==========
@@ -562,7 +543,7 @@ NEXT_PUBLIC_APP_NAME=NowBuild
 ## 项目结构
 
 ```
-├── middleware.ts                  # Clerk + next-intl 中间件
+├── middleware.ts                  # Supabase Auth + next-intl 中间件
 ├── next.config.mjs                # Next.js 配置
 ├── next-sitemap.config.js         # 站点地图自动生成配置
 ├── supabase/schema.sql            # 数据库建表 SQL
@@ -669,7 +650,7 @@ NEXT_PUBLIC_APP_NAME=NowBuild
 
 ## 常见问题
 
-**Q: 没有配 Clerk/Stripe 密钥能运行吗？**
+**Q: 没有配 Supabase/Stripe 密钥能运行吗？**
 A: 可以。项目做了优雅降级处理，没有真实密钥时认证和支付功能会自动跳过，但你仍然能看到完整的 UI。
 
 **Q: 可以用其他支付平台替代 Stripe 吗？**

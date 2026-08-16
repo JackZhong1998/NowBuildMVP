@@ -17,7 +17,7 @@ If you need a website with user authentication, subscription payments, a landing
 
 | What you need | What we use | Your time |
 |--------------|-------------|-----------|
-| User login / signup | Clerk | Built-in, 0 hours |
+| User login / signup | Supabase Auth | Built-in, 0 hours |
 | Online payments (subscriptions) | Stripe | Built-in, 0 hours |
 | Analytics | Google Analytics | Built-in, 0 hours |
 | Database | Supabase | Built-in, 0 hours |
@@ -36,7 +36,7 @@ If you need a website with user authentication, subscription payments, a landing
 | Framework | Next.js 15 | Full-stack React framework with SSR |
 | Language | TypeScript | Type safety, fewer bugs |
 | Styling | Tailwind CSS 4 | Utility-first CSS |
-| Auth | Clerk | User login, signup, social auth |
+| Auth | Supabase Auth | Email signup, login, and verified sessions |
 | Payments | Stripe | Global payment platform |
 | Database | Supabase | PostgreSQL cloud database |
 | i18n | next-intl | Internationalization framework |
@@ -55,7 +55,7 @@ If you need a website with user authentication, subscription payments, a landing
 | Privacy Policy | `/privacy` | Full privacy policy template (EN & ZH) |
 | Terms of Service | `/terms` | Full terms template (EN & ZH) |
 | About | `/about` | Team story + values |
-| Auth | `/sign-in` `/sign-up` | Clerk authentication pages |
+| Auth | `/sign-in` `/sign-up` | Supabase Auth pages |
 
 ---
 
@@ -117,33 +117,31 @@ You need accounts on 3 platforms:
 
 | Platform | Purpose | Sign Up |
 |----------|---------|---------|
-| Clerk | User authentication | https://clerk.com |
+| Supabase | Authentication and database | https://supabase.com |
 | Stripe | Online payments | https://stripe.com |
 | Supabase | Database storage | https://supabase.com |
 | Google Analytics | User behavior analytics | https://analytics.google.com |
 
 ---
 
-### 📌 Step 1: Set Up Clerk (Authentication)
+### 📌 Step 1: Set Up Supabase Auth
 
-> Clerk handles user login and signup. You need **2 keys**.
+> Authentication and database use the same Supabase project, avoiding another vendor and user-ID mapping layer.
 
 | Variable | Description |
 |----------|-------------|
-| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Public key (safe for frontend) |
-| `CLERK_SECRET_KEY` | Secret key (server-side only) |
+| `NEXT_PUBLIC_SUPABASE_URL` | Project URL (safe for frontend) |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Publishable key (safe for frontend) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Privileged server-only database key |
 
 **How to get them:**
 
-1. Go to https://clerk.com → click **"Sign Up"**
-2. After logging in, click **"+ Create application"**
-3. Enter an app name (e.g., `NowBuild`), choose sign-in methods (Email + Google recommended)
-4. Click **"Create application"**
-5. You'll see both keys displayed on the next screen — copy them to your `.env.local`
+1. Create a project at https://supabase.com.
+2. Open **Project Settings → API Keys** and copy the Project URL, publishable key, and service role key.
+3. Under **Authentication → URL Configuration**, add local and production site URLs and allow the `/auth/confirm` callback.
+4. Add the values to `.env.local`. Email signup, confirmation, login, logout, and protected routes are already wired.
 
-> 💡 **Can't find the keys?** Go to **API Keys** in the left sidebar of your Clerk Dashboard.
-
-> ⚠️ **Security**: Never expose `CLERK_SECRET_KEY` publicly. The `.env.local` file is already in `.gitignore`.
+> ⚠️ **Security**: `SUPABASE_SERVICE_ROLE_KEY` is privileged and server-only. Never expose or commit it.
 
 ---
 
@@ -254,7 +252,7 @@ The CLI will output a temporary webhook secret — copy it to `STRIPE_WEBHOOK_SE
 | Variable | Description |
 |----------|-------------|
 | `NEXT_PUBLIC_SUPABASE_URL` | Project API URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Anonymous public key |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Anonymous public key |
 | `SUPABASE_SERVICE_ROLE_KEY` | Service role key (full access) |
 
 **How to get them:**
@@ -264,7 +262,7 @@ The CLI will output a temporary webhook secret — copy it to `STRIPE_WEBHOOK_SE
 3. Wait ~1-2 minutes for the project to be ready
 4. Go to **Settings** (gear icon) → **API**:
    - **Project URL** → copy to `NEXT_PUBLIC_SUPABASE_URL`
-   - **anon public** key → copy to `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - **publishable** key → copy to `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
    - **service_role secret** key (click the eye icon to reveal) → copy to `SUPABASE_SERVICE_ROLE_KEY`
 
 > ⚠️ **Security**: The `service_role` key bypasses Row Level Security. Never use it in frontend code.
@@ -316,7 +314,7 @@ The CLI will output a temporary webhook secret — copy it to `STRIPE_WEBHOOK_SE
 ## Project Structure
 
 ```
-├── middleware.ts                  # Clerk + next-intl middleware
+├── middleware.ts                  # Supabase Auth + next-intl middleware
 ├── next.config.mjs                # Next.js configuration
 ├── next-sitemap.config.js         # Sitemap generation config
 ├── supabase/schema.sql            # Database schema
@@ -333,8 +331,8 @@ The CLI will output a temporary webhook secret — copy it to `STRIPE_WEBHOOK_SE
     │   │   ├── pricing/           # Pricing page
     │   │   ├── privacy/           # Privacy policy
     │   │   ├── terms/             # Terms of service
-    │   │   ├── sign-in/           # Sign in (Clerk)
-    │   │   └── sign-up/           # Sign up (Clerk)
+    │   │   ├── sign-in/           # Sign in (Supabase Auth)
+    │   │   └── sign-up/           # Sign up (Supabase Auth)
     │   └── api/                   # API routes (Stripe)
     ├── components/                # UI components
     ├── i18n/                      # Internationalization config
@@ -398,7 +396,7 @@ Built-in support for English and Chinese. All page content is managed through JS
 
 ## FAQ
 
-**Q: Can I run the project without Clerk/Stripe keys?**
+**Q: Can I run the project without Supabase/Stripe keys?**
 A: Yes. The project gracefully degrades — auth and payment features are automatically skipped, but you can still see the full UI.
 
 **Q: Can I use a different payment provider?**

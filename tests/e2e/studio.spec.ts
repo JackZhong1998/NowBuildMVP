@@ -61,7 +61,7 @@ test('shows an immediate website preview, history, and project configuration', a
   await page.getByRole('button', { name: /配置/ }).click();
   await expect(page.getByRole('dialog', { name: '项目配置' })).toBeVisible();
   await expect(page.getByText(/密钥保护/)).toBeVisible();
-  await expect(page.getByText('Clerk Publishable Key')).toBeVisible();
+  await expect(page.getByText('Supabase Project URL')).toBeVisible();
 });
 
 test('shows the sent prompt and a waiting state while planning', async ({ page }) => {
@@ -117,10 +117,10 @@ test('the generated full-stack product completes its core workflow', async ({ pa
   expect(overflow).toBeLessThanOrEqual(1);
 });
 
-test('generated login degrades to setup guidance when project Clerk keys are missing', async ({ page }) => {
+test('generated login degrades to setup guidance when project Supabase keys are missing', async ({ page }) => {
   const projectId = await proofPilotId(page);
   await page.goto(`/p/${projectId}/zh/sign-in`);
   await expect(page.getByRole('heading', { name: '登录 ProofPilot' })).toBeVisible();
-  await expect(page.getByText(/还没有配置自己的 Clerk 测试 Key/)).toBeVisible();
+  await expect(page.getByText(/Supabase 登录已接入/)).toBeVisible();
   await expect(page.getByRole('link', { name: /返回 NowBuild 配置登录/ })).toBeVisible();
 });

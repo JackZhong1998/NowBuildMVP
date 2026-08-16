@@ -1,44 +1,39 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 import { Link } from '@/i18n/navigation';
+import { createBrowserSupabase } from '@/lib/supabase/client';
+import { isSupabaseConfigured } from '@/lib/supabase/config';
 import LanguageSwitcher from './LanguageSwitcher';
 
-const isClerkConfigured =
-  typeof process !== 'undefined' &&
-  process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY &&
-  !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.includes('xxxxx');
-
 function AuthButtons({ signInLabel, getStartedLabel }: { signInLabel: string; getStartedLabel: string }) {
-  if (!isClerkConfigured) {
-    return (
-      <>
-        <Link href="/sign-in" className="rounded-lg px-3.5 py-2 text-sm font-medium text-gray-600 transition-colors hover:text-gray-900">
-          {signInLabel}
-        </Link>
-        <Link href="/sign-up" className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-primary-700 hover:shadow-md">
-          {getStartedLabel}
-        </Link>
-      </>
-    );
+  const configured = isSupabaseConfigured();
+  const [email, setEmail] = useState<string | null>(null);
+  const [loaded, setLoaded] = useState(!configured);
+
+  useEffect(() => {
+    if (!configured) return;
+    const supabase = createBrowserSupabase();
+    void supabase.auth.getUser().then(({ data }) => { setEmail(data.user?.email || null); setLoaded(true); });
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => { setEmail(session?.user.email || null); setLoaded(true); });
+    return () => data.subscription.unsubscribe();
+  }, [configured]);
+
+  async function signOut() {
+    await createBrowserSupabase().auth.signOut();
+    window.location.href = '/';
   }
 
-  return (
+  if (!loaded) return <span className="h-9 w-20 animate-pulse rounded-lg bg-gray-100" aria-label="Loading account" />;
+
+  return email ? (
     <>
-      <SignedOut>
-        <Link href="/sign-in" className="rounded-lg px-3.5 py-2 text-sm font-medium text-gray-600 transition-colors hover:text-gray-900">
-          {signInLabel}
-        </Link>
-        <Link href="/sign-up" className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-primary-700 hover:shadow-md">
-          {getStartedLabel}
-        </Link>
-      </SignedOut>
-      <SignedIn>
-        <UserButton afterSignOutUrl="/" />
-      </SignedIn>
+      <Link href="/dashboard" className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white">Dashboard</Link>
+      <button onClick={() => void signOut()} title={email} aria-label={`Sign out ${email}`} className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-xs font-black uppercase">{email.slice(0, 1)}</button>
     </>
+  ) : (
+    <><Link href="/sign-in" className="rounded-lg px-3.5 py-2 text-sm font-medium text-gray-600">{signInLabel}</Link><Link href="/sign-up" className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white">{getStartedLabel}</Link></>
   );
 }
 

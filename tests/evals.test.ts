@@ -30,7 +30,7 @@ async function evaluateRepository(cwd: string, item: ProjectBrief, buildPassed: 
     { label: '真实 SaaS Kit 工作区', weight: 10, passed: await exists(resolve(cwd, 'package.json')) && await exists(resolve(cwd, 'supabase/schema.sql')), evidence: 'package.json + supabase/schema.sql' },
     { label: '独立生产构建通过', weight: 20, passed: buildPassed && await exists(resolve(cwd, '.next/BUILD_ID')), evidence: 'npm run build + .next/BUILD_ID' },
     { label: '完整公开站路由', weight: 10, passed: ['/page', '/pricing/page', '/blog/page', '/about/page'].every((route) => routeNames.includes(route)), evidence: 'Next app-paths manifest' },
-    { label: '登录与注册路由', weight: 10, passed: routeNames.includes('/sign-in/') && routeNames.includes('/sign-up/'), evidence: 'Clerk routes in build manifest' },
+    { label: '登录与注册路由', weight: 10, passed: routeNames.includes('/sign-in/') && routeNames.includes('/sign-up/'), evidence: 'Supabase Auth routes in build manifest' },
     { label: '产品工作区路由', weight: 10, passed: routeNames.includes('/dashboard/page') && product.includes("'use client'"), evidence: 'dashboard route + interactive client' },
     { label: '核心业务功能落入代码', weight: 15, passed: product.includes(item.coreFeature) && product.includes('function run()'), evidence: 'generated ProductWorkspace.tsx' },
     { label: '官网匹配品牌与用户', weight: 10, passed: home.includes(item.name) && home.includes(item.audience) && home.includes(item.idea), evidence: 'generated localized homepage' },

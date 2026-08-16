@@ -3,15 +3,10 @@ import type { Metadata } from 'next';
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { getMessages, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
-import { ClerkProvider } from '@clerk/nextjs';
 import { Plus_Jakarta_Sans, DM_Sans } from 'next/font/google';
 import { routing } from '@/i18n/routing';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
 import { getBaseUrl, getSiteName } from '@/lib/seo';
-
-const isClerkConfigured =
-  process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY &&
-  !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.includes('xxxxx');
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
@@ -81,13 +76,7 @@ export default async function LocaleLayout({ children, params }: Props) {
   return (
     <div className={`${jakarta.variable} ${dmSans.variable} min-h-screen bg-white antialiased`}>
       <GoogleAnalytics />
-      {isClerkConfigured ? (
-        <ClerkProvider>
-          <NextIntlClientProvider messages={messages}>{children}</NextIntlClientProvider>
-        </ClerkProvider>
-      ) : (
-        <NextIntlClientProvider messages={messages}>{children}</NextIntlClientProvider>
-      )}
+      <NextIntlClientProvider messages={messages}>{children}</NextIntlClientProvider>
     </div>
   );
 }

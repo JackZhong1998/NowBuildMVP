@@ -101,6 +101,76 @@ export type BuildProgress = {
   updatedAt: string;
 };
 
+export type ProjectSkill = {
+  id: string;
+  name: string;
+  description: string;
+  content: string;
+  enabled: boolean;
+  source: 'imported' | 'catalog';
+  createdAt: string;
+};
+
+export type MCPTransport = 'streamable-http' | 'sse';
+
+export type ProjectMCPServer = {
+  id: string;
+  catalogId?: string;
+  name: string;
+  description: string;
+  transport: MCPTransport;
+  endpoint: string;
+  auth: 'oauth' | 'bearer-env' | 'none' | 'provider-managed';
+  envVars: string[];
+  tools: string[];
+  safetyNote?: string;
+  enabled: boolean;
+  setupRequired: boolean;
+  createdAt: string;
+};
+
+export type ProjectAsset = {
+  id: string;
+  name: string;
+  kind: 'image' | 'video';
+  mimeType: string;
+  bytes: number;
+  storageName: string;
+  publicPath: string;
+  createdAt: string;
+};
+
+export type ProjectResources = {
+  skills: ProjectSkill[];
+  mcpServers: ProjectMCPServer[];
+  assets: ProjectAsset[];
+};
+
+export type ProjectTestItem = {
+  id: string;
+  label: string;
+  source: 'automatic' | 'journey' | 'acceptance';
+  status: 'pending' | 'current' | 'passed' | 'failed' | 'skipped' | 'needs-retest';
+  requires?: 'supabase' | 'stripe';
+  issue?: string;
+  updatedAt?: string;
+};
+
+export type ProjectTestingState = {
+  status: 'not-started' | 'testing' | 'needs-setup' | 'fixing' | 'retest' | 'passed';
+  items: ProjectTestItem[];
+  activeItemId?: string;
+  startedAt?: string;
+  updatedAt: string;
+};
+
+export type ProjectLaunchState = {
+  supabaseRedirectConfirmed?: boolean;
+  stripeWebhookConfirmed?: boolean;
+  productionEnvironmentSynced?: boolean;
+  updatedAt: string;
+};
+
 export type ProjectSession = {
   id: string;
   ownerId: string;
@@ -114,6 +184,9 @@ export type ProjectSession = {
   result?: AgentRunResult;
   lastError?: string;
   buildProgress?: BuildProgress;
+  resources?: ProjectResources;
+  testing?: ProjectTestingState;
+  launch?: ProjectLaunchState;
   isExample?: boolean;
   deployment?: {
     status: 'uploading' | 'building' | 'ready' | 'error';

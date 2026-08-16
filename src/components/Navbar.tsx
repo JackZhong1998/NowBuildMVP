@@ -11,7 +11,15 @@ const isClerkConfigured =
   process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY &&
   !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.includes('xxxxx');
 
-function AuthButtons({ signInLabel, getStartedLabel }: { signInLabel: string; getStartedLabel: string }) {
+function AuthButtons({
+  signInLabel,
+  getStartedLabel,
+  workspaceLabel,
+}: {
+  signInLabel: string;
+  getStartedLabel: string;
+  workspaceLabel: string;
+}) {
   if (!isClerkConfigured) {
     return (
       <>
@@ -36,6 +44,12 @@ function AuthButtons({ signInLabel, getStartedLabel }: { signInLabel: string; ge
         </Link>
       </SignedOut>
       <SignedIn>
+        <Link
+          href="/dashboard"
+          className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-primary-700 hover:shadow-md"
+        >
+          {workspaceLabel}
+        </Link>
         <UserButton afterSignOutUrl="/" />
       </SignedIn>
     </>
@@ -82,7 +96,11 @@ export default function Navbar() {
         {/* Desktop Actions */}
         <div className="hidden items-center gap-3 md:flex">
           <LanguageSwitcher />
-          <AuthButtons signInLabel={t('signIn')} getStartedLabel={t('getStarted')} />
+          <AuthButtons
+            signInLabel={t('signIn')}
+            getStartedLabel={t('getStarted')}
+            workspaceLabel={t('workspace')}
+          />
         </div>
 
         {/* Mobile Hamburger */}
@@ -118,7 +136,11 @@ export default function Navbar() {
           </div>
           <div className="mt-4 flex flex-col gap-2 border-t border-gray-100 pt-4">
             <LanguageSwitcher />
-            <AuthButtons signInLabel={t('signIn')} getStartedLabel={t('getStarted')} />
+            <AuthButtons
+              signInLabel={t('signIn')}
+              getStartedLabel={t('getStarted')}
+              workspaceLabel={t('workspace')}
+            />
           </div>
         </div>
       )}

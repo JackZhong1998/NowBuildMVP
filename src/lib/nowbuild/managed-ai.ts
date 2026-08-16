@@ -57,9 +57,9 @@ export const managedAICapabilities = [
 ] as const;
 
 const defaultModels: Record<Exclude<AICapability, 'music' | '3d'>, string> = {
-  text: '~openai/gpt-latest',
+  text: 'deepseek/deepseek-v4-flash',
   image: 'bytedance-seed/seedream-4.5',
-  video: 'google/veo-3.1-fast',
+  video: 'bytedance/seedance-2.0-fast',
   speech: 'elevenlabs/eleven-turbo-v2',
   transcription: 'openai/whisper-1',
 };
@@ -193,7 +193,8 @@ async function generateImage(input: ManagedAIInput, userId: string, projectId: s
   const prompt = cleanText(input.prompt, 4_000);
   if (!prompt) throw new Error('Image prompt is required');
   const model = modelFor('image');
-  const resolution = ['1K', '2K'].includes(String(input.options?.resolution)) ? input.options?.resolution : '1K';
+  const requestedResolution = ['1K', '2K'].includes(String(input.options?.resolution)) ? input.options?.resolution : '2K';
+  const resolution = model.includes('seedream-4.5') && requestedResolution === '1K' ? '2K' : requestedResolution;
   const aspectRatio = ['1:1', '16:9', '9:16', '4:3', '3:4'].includes(String(input.options?.aspectRatio)) ? input.options?.aspectRatio : '1:1';
   const response = await openRouter('images', {
     method: 'POST', headers: headers(), body: JSON.stringify({

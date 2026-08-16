@@ -18,7 +18,7 @@ Help users achieve the following as fast as possible:
 
 - Project name: `nowbuild-saas-kit`
 - Stack: Next.js 15 + TypeScript + Tailwind CSS 4
-- Core services: Clerk, Stripe, Supabase, Google Analytics
+- Core services: Supabase Auth + Database, Stripe, Google Analytics
 - Core commands:
   - Install: `npm install`
   - Dev: `npm run dev`
@@ -67,25 +67,25 @@ Explain the two-phase approach:
 
 Guide values in this order:
 
-1. Clerk
-   - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
-   - `CLERK_SECRET_KEY`
+1. Supabase Auth
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
 2. Stripe
    - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
    - `STRIPE_SECRET_KEY`
    - `STRIPE_WEBHOOK_SECRET`
    - `NEXT_PUBLIC_STRIPE_MONTHLY_PRICE_ID`
    - `NEXT_PUBLIC_STRIPE_YEARLY_PRICE_ID`
-3. Supabase
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+3. Supabase server-side database access
    - `SUPABASE_SERVICE_ROLE_KEY`
+   - `SUPABASE_PROJECT_REF` (only needed when NowBuild applies schema through MCP)
+   - `SUPABASE_ACCESS_TOKEN` (MCP-only management secret; never deploy it to the generated app)
 4. Analytics
    - `NEXT_PUBLIC_GA_MEASUREMENT_ID`
 
 ### Step 4: Initialize Database (When Using Real Supabase)
 
-Tell user to run the SQL from `supabase/schema.sql` in Supabase SQL Editor.
+Prefer previewing `supabase/schema.sql` in NowBuild and applying it through Supabase MCP after explicit confirmation. Manual execution in Supabase SQL Editor remains available.
 
 ### Step 5: Acceptance Checks
 

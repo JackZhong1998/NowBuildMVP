@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve, sep } from 'node:path';
 import type { ProjectPlan, ProjectSession } from './types';
 import { normalizeStyleId, styleCatalogById } from './style-catalog';
+import { emptyProjectResources, normalizeProjectResources } from './project-resources';
 
 const SESSION_ROOT = join(tmpdir(), 'nowbuild-sessions');
 const PROJECT_ROOT = join(tmpdir(), 'nowbuild-projects');
@@ -32,6 +33,7 @@ export async function createProjectSession(ownerId: string, prompt: string) {
   const session: ProjectSession = {
     id: randomUUID(), ownerId, title: prompt.slice(0, 48), initialPrompt: prompt,
     status: 'planning', createdAt: now, updatedAt: now,
+    resources: emptyProjectResources(),
     messages: [{ id: randomUUID(), role: 'user', content: prompt, kind: 'prompt', createdAt: now }],
   };
   await saveProjectSession(session);
@@ -59,6 +61,7 @@ async function synthesizedExample(id: string): Promise<ProjectSession | null> {
         { id: `${id}-u`, role: 'user', content: brief.idea, kind: 'prompt', createdAt: manifest.generatedAt },
         { id: `${id}-a`, role: 'assistant', content: `已确认 ${brief.name} 的产品方案，并完成整站开发、构建与测试。`, kind: 'result', createdAt: manifest.generatedAt },
       ],
+      resources: emptyProjectResources(),
       result: { projectId: id, mode: 'scaffold', summary: 'SaaS Kit 全站示例', prd: [], files: [], logs: ['✓ SaaS Kit production build passed', '✓ 官网、产品、定价与登录路由可访问'], previewUrl: `/p/${id}/${brief.locale}`, routes: [{ label: '官网', path: `/${brief.locale}` }, { label: '产品', path: `/${brief.locale}/dashboard` }, { label: '定价', path: `/${brief.locale}/pricing` }, { label: '登录', path: `/${brief.locale}/sign-in` }], usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, costUsd: 0 }, creditsCharged: 0 },
     };
   } catch { return null; }
@@ -69,6 +72,7 @@ export async function getProjectSession(id: string, ownerId?: string) {
   try {
     session = JSON.parse(await readFile(sessionPath(id), 'utf8')) as ProjectSession;
     if (session.plan?.brief) session.plan.brief.style = normalizeStyleId(String(session.plan.brief.style));
+    session.resources = normalizeProjectResources(session.resources);
   } catch { session = await synthesizedExample(id); }
   if (!session) return null;
   if (ownerId && session.ownerId !== ownerId && !session.isExample) return null;
@@ -82,6 +86,7 @@ export async function listProjectSessions(ownerId?: string) {
     if (!name.endsWith('.json')) continue;
     try {
       const item = JSON.parse(await readFile(join(SESSION_ROOT, name), 'utf8')) as ProjectSession;
+      item.resources = normalizeProjectResources(item.resources);
       if (!ownerId || item.ownerId === ownerId) sessions.push(item);
     } catch { /* ignore incomplete cache writes */ }
   }
@@ -101,7 +106,7 @@ export async function listExampleSessions() {
   return all.filter((item) => item.isExample && item.status === 'built');
 }
 
-export async function updateProjectSession(id: string, ownerId: string, update: Partial<Pick<ProjectSession, 'status' | 'plan' | 'messages' | 'result' | 'lastError' | 'title' | 'deployment' | 'buildProgress'>>) {
+export async function updateProjectSession(id: string, ownerId: string, update: Partial<Pick<ProjectSession, 'status' | 'plan' | 'messages' | 'result' | 'lastError' | 'title' | 'deployment' | 'buildProgress' | 'resources' | 'testing' | 'launch'>>) {
   const session = await getProjectSession(id, ownerId);
   if (!session || session.isExample) throw new Error('Project not found');
   Object.assign(session, update);

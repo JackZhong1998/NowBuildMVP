@@ -1,5 +1,5 @@
-import { auth } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
+import { getUserId } from '@/lib/auth';
 import { getServiceSupabase } from '@/lib/supabase';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import BillingPortalButton from '@/components/BillingPortalButton';
@@ -14,7 +14,7 @@ export default async function DashboardPage({ params, searchParams }: Props) {
   const { payment } = await searchParams;
   setRequestLocale(locale);
 
-  const { userId } = await auth();
+  const userId = await getUserId();
   if (!userId) {
     redirect(`/${locale}/sign-in`);
   }

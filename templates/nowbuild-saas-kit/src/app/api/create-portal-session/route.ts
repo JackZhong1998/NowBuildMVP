@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { getUserId } from '@/lib/auth';
 import { getStripe } from '@/lib/stripe';
 import { getServiceSupabase } from '@/lib/supabase';
 
 export async function POST(request: Request) {
   try {
-    const { userId } = await auth();
+    const userId = await getUserId();
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const { locale } = await request.json();
     const safeLocale = locale === 'zh' ? 'zh' : 'en';

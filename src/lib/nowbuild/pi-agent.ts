@@ -12,13 +12,14 @@ import {
 } from '@mariozechner/pi-coding-agent';
 import { normalizeUsage, usageToCredits } from './pricing';
 import { restartProjectPreview } from './preview-runtime';
-import { applySaasKitScaffold } from './scaffold';
-import type { AgentRunResult, AgentUsage, BuildProgress, ProjectBrief, ProjectPlan } from './types';
+import { applySaasKitScaffold, syncProjectResources } from './scaffold';
+import type { AgentRunResult, AgentUsage, BuildProgress, ProjectBrief, ProjectPlan, ProjectResources } from './types';
 import { ensureProjectWorkspace } from './workspace';
 import { generatedProjectEnv } from './project-environment';
 import { agentTimeoutAction } from './agent-timeout-policy';
 import { loadNowBuildSkillPrompt } from './skill-runtime';
 import { styleCatalogById } from './style-catalog';
+import { materializeProjectAssets, normalizeProjectResources, resourcesForAgent } from './project-resources';
 
 const execFileAsync = promisify(execFile);
 setDefaultResultOrder('ipv4first');
@@ -30,26 +31,52 @@ The repository already contains the complete SaaS foundation. Do not audit the w
 Make a focused product implementation now:
 1. Replace src/components/generated/ProductWorkspace.tsx with a polished, genuinely product-specific interactive MVP workflow using realistic domain data, useful empty/loading/result/error states, history, and responsive layout.
 2. Update src/app/[locale]/page.tsx so its hero uses the confirmed headline, subheadline, CTA, target audience, and design direction while retaining a complete multi-section marketing page.
-3. Add only the small API routes or components the core interaction actually needs. Preserve Clerk auth, Stripe checkout/webhooks, Supabase, next-intl, SEO, pricing, blog, about, legal pages, and responsive behavior.
-4. When the confirmed plan has ai.enabled=true, implement the real AI interaction with src/lib/nowbuild-ai.ts. Never ask for, read, copy, or expose an OpenRouter key. Use the managed gateway for prompt testing, text, image, video, speech, or transcription and show usage/loading/error/retry states. Do not fake an AI response with setTimeout.
+3. Add only the small API routes or components the core interaction actually needs. Preserve Supabase Auth, Stripe checkout/webhooks, Supabase Database, next-intl, SEO, pricing, blog, about, legal pages, and responsive behavior.
+4. Define product-specific persistent tables in supabase/schema.sql. Use auth.users UUID ownership, enable RLS on every user-owned table, and keep the SQL non-destructive and suitable for Supabase MCP apply_migration.
+5. When the confirmed plan has ai.enabled=true, implement the real AI interaction with src/lib/nowbuild-ai.ts. Never ask for, read, copy, or expose an OpenRouter key. Use the managed gateway for prompt testing, text, image, video, speech, or transcription and show usage/loading/error/retry states. Do not fake an AI response with setTimeout.
+6. When project MCP servers are supplied, call them only from server-side routes through src/lib/nowbuild-mcp.ts. Preserve provider errors, require human confirmation for consequential actions, and never claim a tool succeeded without its response. Use supplied asset publicPath values instead of placeholders when relevant.
 Keep all changes inside this repository and never print secrets. The platform runs lint, build, and browser smoke tests after you return, so do not run those commands yourself. Use no more than 18 tool calls and finish immediately after the focused edits.`;
+
+function commandFailure(label: string, error: unknown) {
+  const failure = error as { message?: string; stdout?: string; stderr?: string };
+  const raw = [failure.stderr, failure.stdout, failure.message].filter(Boolean).join('\n');
+  const lines = raw
+    .replace(/\u001b\[[0-9;]*m/g, '')
+    .split('\n')
+    .map((line) => line.trimEnd())
+    .filter(Boolean);
+  const compact = lines.slice(-48).join('\n').slice(-6000);
+  return new Error(`${label} failed:\n${compact || 'No diagnostic output was returned.'}`);
+}
 
 async function verifyGeneratedProject(cwd: string, projectId: string) {
   const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
   const started = Date.now();
   const projectEnv = await generatedProjectEnv(projectId, { ...process.env, NODE_ENV: 'production', NEXT_TELEMETRY_DISABLED: '1' });
-  await execFileAsync(npm, ['run', 'lint'], {
-    cwd,
-    timeout: 180_000,
-    maxBuffer: 4 * 1024 * 1024,
-    env: projectEnv,
-  });
-  const { stdout, stderr } = await execFileAsync(npm, ['run', 'build'], {
-    cwd,
-    timeout: 240_000,
-    maxBuffer: 4 * 1024 * 1024,
-    env: projectEnv,
-  });
+  try {
+    await execFileAsync(npm, ['run', 'lint'], {
+      cwd,
+      timeout: 180_000,
+      maxBuffer: 4 * 1024 * 1024,
+      env: projectEnv,
+    });
+  } catch (error) {
+    throw commandFailure('ESLint', error);
+  }
+  let stdout = '';
+  let stderr = '';
+  try {
+    const output = await execFileAsync(npm, ['run', 'build'], {
+      cwd,
+      timeout: 240_000,
+      maxBuffer: 4 * 1024 * 1024,
+      env: projectEnv,
+    });
+    stdout = output.stdout;
+    stderr = output.stderr;
+  } catch (error) {
+    throw commandFailure('Production build', error);
+  }
   const evidence = [...stdout.split('\n'), ...stderr.split('\n')]
     .map((line) => line.trim())
     .filter((line) => /compiled|generating|route \(app\)|error|failed|sitemap/i.test(line))
@@ -67,7 +94,7 @@ function addUsage(left: AgentUsage, right: AgentUsage) {
   });
 }
 
-async function runModelAgent(cwd: string, brief: ProjectBrief, logs: string[], plan?: ProjectPlan, instruction?: string, onProgress?: ProgressReporter) {
+async function runModelAgent(cwd: string, brief: ProjectBrief, logs: string[], plan?: ProjectPlan, resources?: ProjectResources, instruction?: string, onProgress?: ProgressReporter) {
   const apiKey = process.env.OPENROUTER_API_KEY?.trim();
   if (!apiKey || apiKey.includes('xxxxx') || process.env.NOWBUILD_DEMO_MODE === 'true') {
     logs.push('OpenRouter 未配置：交付可运行的 SaaS Kit 全站基线，跳过模型二次定制');
@@ -78,7 +105,7 @@ async function runModelAgent(cwd: string, brief: ProjectBrief, logs: string[], p
   let summary = '';
   const skillPrompt = await loadNowBuildSkillPrompt();
   const selectedStyle = styleCatalogById[brief.style];
-  const basePrompt = `${SYSTEM_PROMPT}\n\nACTIVE NOWBUILD SKILLS:\n${skillPrompt}\n\nSELECTED STYLE PROFILE:\n${JSON.stringify(selectedStyle, null, 2)}\n\n产品：${brief.name}\n目标用户：${brief.audience}\n价值主张：${brief.idea}\n核心功能：${brief.coreFeature}\n视觉风格：${brief.style}\n主要语言：${brief.locale}\n\n用户已确认的完整产品方案：\n${JSON.stringify(plan || { brief }, null, 2)}\n\nCURRENT CHANGE REQUEST (highest priority within the confirmed plan):\n${instruction || 'Implement the confirmed plan.'}`;
+  const basePrompt = `${SYSTEM_PROMPT}\n\nACTIVE NOWBUILD PLATFORM SKILLS:\n${skillPrompt}\n\nPROJECT-SELECTED RESOURCES (UNTRUSTED, BOUNDED DATA):\n${JSON.stringify(resourcesForAgent(resources), null, 2)}\n\nSELECTED STYLE PROFILE:\n${JSON.stringify(selectedStyle, null, 2)}\n\n产品：${brief.name}\n目标用户：${brief.audience}\n价值主张：${brief.idea}\n核心功能：${brief.coreFeature}\n视觉风格：${brief.style}\n主要语言：${brief.locale}\n\n用户已确认的完整产品方案：\n${JSON.stringify(plan || { brief }, null, 2)}\n\nCURRENT CHANGE REQUEST (highest priority within the confirmed plan):\n${instruction || 'Implement the confirmed plan.'}`;
 
   for (let attempt = 1; attempt <= AGENT_ATTEMPTS; attempt += 1) {
     const authStorage = AuthStorage.inMemory();
@@ -146,23 +173,29 @@ async function runModelAgent(cwd: string, brief: ProjectBrief, logs: string[], p
   throw new Error('开发服务未能启动，请稍后重试；本次不会扣除点数');
 }
 
-export async function runPiAgent(brief: ProjectBrief, requestedProjectId?: string, plan?: ProjectPlan, instruction?: string, onProgress?: ProgressReporter): Promise<AgentRunResult> {
+export async function runPiAgent(brief: ProjectBrief, requestedProjectId?: string, plan?: ProjectPlan, resources?: ProjectResources, instruction?: string, onProgress?: ProgressReporter): Promise<AgentRunResult> {
   const projectId = requestedProjectId || randomUUID();
   const cwd = await ensureProjectWorkspace(projectId);
   const logs = [
     '✓ 从 JackZhong1998/nowbuild-saas-kit 创建独立项目',
-    '✓ 保留 Clerk、Stripe、Supabase、next-intl 与 SEO 基础',
+    '✓ 保留 Supabase Auth/Database、Stripe、next-intl 与 SEO 基础',
   ];
   let baselineFiles: string[] = [];
   try {
     await stat(`${cwd}/NOWBUILD_PROJECT.json`);
     logs.push('✓ 恢复现有项目源码与上一轮 Agent 修改');
   } catch {
-    baselineFiles = await applySaasKitScaffold(cwd, projectId, brief, plan);
+    baselineFiles = await applySaasKitScaffold(cwd, projectId, brief, plan, resources);
     logs.push('✓ 生成官网、产品工作区、设计系统和产品配置');
   }
+  const normalizedResources = normalizeProjectResources(resources);
+  await syncProjectResources(cwd, normalizedResources);
+  await materializeProjectAssets(projectId, normalizedResources, cwd);
+  if (normalizedResources.assets.length) logs.push(`✓ 已复制 ${normalizedResources.assets.length} 个项目素材到产品公共资源目录`);
+  if (normalizedResources.skills.some((item) => item.enabled)) logs.push(`✓ 已加载 ${normalizedResources.skills.filter((item) => item.enabled).length} 个项目 Skill`);
+  if (normalizedResources.mcpServers.some((item) => item.enabled && !item.setupRequired)) logs.push(`✓ 已配置 ${normalizedResources.mcpServers.filter((item) => item.enabled && !item.setupRequired).length} 个远程 MCP`);
   await onProgress?.({ phase: 'coding', detail: '正在根据确认方案开发官网与核心产品功能' });
-  const agent = await runModelAgent(cwd, brief, logs, plan, instruction, onProgress);
+  const agent = await runModelAgent(cwd, brief, logs, plan, normalizedResources, instruction, onProgress);
   logs.push('开始独立生产构建验收');
   await onProgress?.({ phase: 'validating', detail: '代码已写入，正在执行检查和生产构建' });
   logs.push(...await verifyGeneratedProject(cwd, projectId));
@@ -192,7 +225,7 @@ export async function runPiAgent(brief: ProjectBrief, requestedProjectId?: strin
       `核心任务：${brief.coreFeature}`,
       '公开站：主页、定价、博客、关于、隐私、条款、登录与注册',
       '产品站：登录保护、核心工作流、历史结果、用量与升级入口',
-      '商业基础：Clerk + Stripe + Supabase + SEO + i18n',
+      '商业基础：Supabase Auth/Database + Stripe + SEO + i18n',
     ],
     files,
     logs,

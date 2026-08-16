@@ -18,7 +18,7 @@ description: 帮用户在 Cursor、Claude Code、Codex 三个平台快速接入�
 
 - 项目名：`nowbuild-saas-kit`
 - 技术栈：Next.js 15 + TypeScript + Tailwind CSS 4
-- 关键服务：Clerk、Stripe、Supabase、Google Analytics
+- 关键服务：Supabase Auth + Database、Stripe、Google Analytics
 - 关键命令：
   - 安装依赖：`npm install`
   - 本地开发：`npm run dev`
@@ -67,25 +67,25 @@ npm run dev
 
 按顺序引导填写：
 
-1. Clerk
-   - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
-   - `CLERK_SECRET_KEY`
+1. Supabase Auth
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
 2. Stripe
    - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
    - `STRIPE_SECRET_KEY`
    - `STRIPE_WEBHOOK_SECRET`
    - `NEXT_PUBLIC_STRIPE_MONTHLY_PRICE_ID`
    - `NEXT_PUBLIC_STRIPE_YEARLY_PRICE_ID`
-3. Supabase
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+3. Supabase 服务端数据库访问
    - `SUPABASE_SERVICE_ROLE_KEY`
+   - `SUPABASE_PROJECT_REF`（仅 NowBuild MCP 配置数据库时需要）
+   - `SUPABASE_ACCESS_TOKEN`（仅 NowBuild MCP 配置数据库时需要，不部署到生成项目）
 4. Analytics
    - `NEXT_PUBLIC_GA_MEASUREMENT_ID`
 
 ### Step 4: 数据库初始化（需要真实 Supabase 时）
 
-明确提示用户将 `supabase/schema.sql` 内容复制到 Supabase SQL Editor 执行。
+优先在 NowBuild 中预览 `supabase/schema.sql`，明确确认后通过 Supabase MCP 执行；也可将 SQL 复制到 Supabase SQL Editor 手动执行。
 
 ### Step 5: 结果验收
 

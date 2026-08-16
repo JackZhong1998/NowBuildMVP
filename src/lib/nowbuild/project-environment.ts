@@ -4,9 +4,11 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { environmentFields, generatedRuntimeKeys } from './environment-schema';
+import type { EnvironmentField } from './environment-schema';
+import { getProjectSession } from './project-store';
+import { normalizeProjectResources } from './project-resources';
 
 const ROOT = join(tmpdir(), 'nowbuild-project-secrets');
-const allowed = new Set(environmentFields.map((field) => field.key));
 
 function safeId(id: string) {
   if (!/^[a-z0-9-]{8,80}$/i.test(id)) throw new Error('Invalid project id');
@@ -45,8 +47,25 @@ async function readValues(projectId: string) {
   }
 }
 
+async function fieldsForProject(projectId: string) {
+  const project = await getProjectSession(projectId);
+  const dynamic: EnvironmentField[] = [];
+  const seen = new Set(environmentFields.map((field) => field.key));
+  for (const server of normalizeProjectResources(project?.resources).mcpServers) {
+    const oauthKey = `NOWBUILD_MCP_${server.name.toUpperCase().replace(/[^A-Z0-9]+/g, '_').replace(/^_+|_+$/g, '')}_ACCESS_TOKEN`;
+    const keys = server.auth === 'oauth' ? [...server.envVars, oauthKey] : server.envVars;
+    for (const key of keys) {
+      if (seen.has(key)) continue;
+      seen.add(key);
+      dynamic.push({ key, label: `${server.name} · ${key}`, group: 'mcp', secret: true, help: server.auth === 'oauth' && key === oauthKey ? `填写已通过 ${server.name} OAuth 获得的访问令牌，仅用于服务端 MCP 调用。` : `仅供 ${server.name} 的服务端 MCP 调用使用。`, placeholder: `${key} value` });
+    }
+  }
+  return [...environmentFields, ...dynamic];
+}
+
 export async function updateProjectEnvironment(projectId: string, updates: Record<string, unknown>) {
   const values = await readValues(projectId);
+  const allowed = new Set((await fieldsForProject(projectId)).map((field) => field.key));
   for (const [key, raw] of Object.entries(updates)) {
     if (!allowed.has(key)) continue;
     const value = String(raw ?? '').trim();
@@ -64,16 +83,20 @@ export async function getProjectEnvironment(projectId: string) {
 
 export async function projectEnvironmentStatus(projectId: string, known?: Record<string, string>) {
   const values = known || await readValues(projectId);
+  const fields = await fieldsForProject(projectId);
+  const allowed = new Set(fields.map((field) => field.key));
   return {
-    fields: environmentFields.map((field) => ({
+    fields: fields.map((field) => ({
       ...field,
       configured: Boolean(values[field.key]),
       masked: values[field.key] ? `${values[field.key].slice(0, field.secret ? 3 : 8)}••••${values[field.key].slice(-4)}` : '',
     })),
     configuredCount: Object.keys(values).filter((key) => allowed.has(key)).length,
-    loginReady: Boolean(values.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && values.CLERK_SECRET_KEY),
-    databaseReady: Boolean(values.NEXT_PUBLIC_SUPABASE_URL && values.NEXT_PUBLIC_SUPABASE_ANON_KEY),
-    paymentsReady: Boolean(values.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY && values.STRIPE_SECRET_KEY),
+    loginReady: Boolean(values.NEXT_PUBLIC_SUPABASE_URL && (values.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || values.NEXT_PUBLIC_SUPABASE_ANON_KEY)),
+    supabaseReady: Boolean(values.NEXT_PUBLIC_SUPABASE_URL && (values.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || values.NEXT_PUBLIC_SUPABASE_ANON_KEY) && values.SUPABASE_SERVICE_ROLE_KEY),
+    databaseReady: Boolean(values.SUPABASE_PROJECT_REF && values.SUPABASE_ACCESS_TOKEN),
+    paymentsReady: Boolean(values.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY && values.STRIPE_SECRET_KEY && values.NEXT_PUBLIC_STRIPE_MONTHLY_PRICE_ID && values.NEXT_PUBLIC_STRIPE_YEARLY_PRICE_ID),
+    paymentsProductionReady: Boolean(values.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY && values.STRIPE_SECRET_KEY && values.NEXT_PUBLIC_STRIPE_MONTHLY_PRICE_ID && values.NEXT_PUBLIC_STRIPE_YEARLY_PRICE_ID && values.STRIPE_WEBHOOK_SECRET),
     aiReady: Boolean(process.env.OPENROUTER_API_KEY && !process.env.OPENROUTER_API_KEY.includes('xxxxx')),
     deployReady: Boolean(values.VERCEL_TOKEN),
   };
@@ -81,11 +104,19 @@ export async function projectEnvironmentStatus(projectId: string, known?: Record
 
 export async function generatedProjectEnv(projectId: string, overrides: NodeJS.ProcessEnv = process.env) {
   const env: NodeJS.ProcessEnv = { ...overrides };
-  for (const key of generatedRuntimeKeys) delete env[key];
+  const fields = await fieldsForProject(projectId);
+  for (const key of [...generatedRuntimeKeys, ...fields.filter((field) => field.group === 'mcp').map((field) => field.key)]) delete env[key];
   // A generated project must never inherit NowBuild's own customer credentials.
-  env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = 'xxxxx';
-  env.CLERK_SECRET_KEY = 'xxxxx';
+  env.NEXT_PUBLIC_SUPABASE_URL = 'https://xxxxx.supabase.co';
+  env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = 'xxxxx';
+  env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'xxxxx';
+  env.SUPABASE_SERVICE_ROLE_KEY = 'xxxxx';
   env.NOWBUILD_PREVIEW_BASE_PATH = `/p/${projectId}`;
   Object.assign(env, await readValues(projectId));
+  // Management credentials belong to NowBuild's setup workflow, never the generated runtime.
+  delete env.SUPABASE_ACCESS_TOKEN;
+  delete env.SUPABASE_PROJECT_REF;
+  delete env.VERCEL_TOKEN;
+  delete env.VERCEL_TEAM_ID;
   return env;
 }

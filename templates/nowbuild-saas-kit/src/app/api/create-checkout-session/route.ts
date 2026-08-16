@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { getUserId } from '@/lib/auth';
 import { getStripe, PLANS } from '@/lib/stripe';
 import { getServiceSupabase } from '@/lib/supabase';
 
@@ -7,7 +7,7 @@ const ACTIVE_SUBSCRIPTION_STATUSES = ['active', 'trialing', 'past_due'];
 
 export async function POST(request: Request) {
   try {
-    const { userId } = await auth();
+    const userId = await getUserId();
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

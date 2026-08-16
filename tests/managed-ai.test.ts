@@ -28,4 +28,15 @@ describe('NowBuild managed AI', () => {
     expect(gateway).toContain("id: 'music', name: '音乐生成', status: 'coming_soon'");
     expect(gateway).toContain("id: '3d', name: '3D 生成', status: 'coming_soon'");
   });
+
+  it('uses platform model routing and does not accept a browser model slug', () => {
+    for (const variable of ['NOWBUILD_AI_TEXT_MODEL', 'NOWBUILD_AI_IMAGE_MODEL', 'NOWBUILD_AI_VIDEO_MODEL', 'NOWBUILD_AI_SPEECH_MODEL', 'NOWBUILD_AI_TRANSCRIPTION_MODEL']) {
+      expect(gateway).toContain(variable);
+    }
+    expect(gateway).not.toContain('model?: string');
+    expect(gateway).toContain("text: 'deepseek/deepseek-v4-flash'");
+    expect(gateway).toContain("video: 'bytedance/seedance-2.0-fast'");
+    expect(gateway).toContain(": '2K'");
+    expect(gateway).toContain("model.includes('seedream-4.5')");
+  });
 });

@@ -2,7 +2,8 @@ import 'server-only';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { styleCatalogById } from './style-catalog';
-import type { ProjectBrief, ProjectPlan } from './types';
+import type { ProjectBrief, ProjectPlan, ProjectResources } from './types';
+import { normalizeProjectResources, resourcesForAgent } from './project-resources';
 
 function literal(value: unknown) {
   return JSON.stringify(value);
@@ -132,7 +133,7 @@ export default function ProductWorkspace({ locale }: { locale: string }) {
       <section className="p-4 sm:p-8"><div className="mx-auto max-w-5xl"><div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div><div className="text-xs font-bold uppercase tracking-[.15em]" style={{ color: '${theme.accent}' }}>{zh ? '产品工作区' : 'Product workspace'}</div><h1 className="mt-2 text-3xl font-black tracking-[-.04em]">{product.idea}</h1><p className="mt-2 text-sm" style={{ color: '${theme.muted}' }}>{product.feature}</p></div><div className="rounded-full border px-3 py-1.5 text-xs" style={{ borderColor: '${theme.muted}33' }}>● {zh ? '服务正常' : 'All systems ready'}</div></div>
         <div className="mt-8 grid gap-5 lg:grid-cols-[1fr_320px]"><div><div className="rounded-[${theme.radius}] border p-5" style={{ background: '${theme.surface}', borderColor: '${theme.muted}22' }}><label className="text-xs font-bold">{zh ? '你想完成什么？' : 'What do you want to accomplish?'}</label><textarea value={input} onChange={(event) => setInput(event.target.value)} rows={5} placeholder={product.feature} className="mt-3 w-full resize-none rounded-[${theme.radius}] border bg-transparent p-4 text-sm outline-none" style={{ borderColor: '${theme.muted}33' }} /><div className="mt-3 flex items-center justify-between"><span className="text-[10px]" style={{ color: '${theme.muted}' }}>{zh ? '草稿默认保存在当前会话' : 'Drafts stay in this session by default'}</span><button onClick={run} disabled={running || !input.trim()} className="rounded-[${theme.radius}] px-5 py-2.5 text-sm font-black disabled:opacity-40" style={{ background: '${theme.accent}', color: '${theme.accentInk}' }}>{running ? (zh ? '处理中…' : 'Working…') : (zh ? '运行核心功能 →' : 'Run workflow →')}</button></div></div>
           <div className="mt-5 rounded-[${theme.radius}] border p-5" style={{ background: '${theme.surface}', borderColor: '${theme.muted}22' }}><div className="flex items-center justify-between"><h2 className="font-black">{zh ? '当前结果' : 'Current result'}</h2><span className="rounded-full px-2 py-1 text-[10px] font-bold" style={{ background: '${theme.accent}22', color: '${theme.accent}' }}>{current.status}</span></div><div className="mt-5 rounded-[${theme.radius}] border p-5" style={{ borderColor: '${theme.muted}22' }}><div className="text-xs font-bold uppercase" style={{ color: '${theme.muted}' }}>{zh ? '输入' : 'Input'}</div><div className="mt-2 text-lg font-black">{current.title}</div>{current.mediaUrl && (current.mediaUrl.startsWith('data:audio') ? <audio controls className="mt-5 w-full" src={current.mediaUrl}/> : <img alt="AI generated result" className="mt-5 max-h-[480px] w-full rounded-xl object-cover" src={current.mediaUrl}/>)}{current.output && <div className="mt-5 whitespace-pre-wrap rounded-xl p-4 text-sm leading-6" style={{ background: '${theme.bg}' }}>{current.output}</div>}<div className="mt-6 grid gap-3 sm:grid-cols-3">{[zh ? '关键结论' : 'Key insight', zh ? '证据' : 'Evidence', zh ? '下一步' : 'Next step'].map((label, index) => <div key={label} className="rounded-lg p-3 text-xs" style={{ background: '${theme.bg}' }}><div className="font-bold" style={{ color: '${theme.accent}' }}>{label}</div><p className="mt-2 leading-5" style={{ color: '${theme.muted}' }}>{index === 0 ? product.idea : index === 1 ? product.feature : (zh ? '验证结果并继续下一轮。' : 'Review the result and run the next iteration.')}</p></div>)}</div></div></div></div>
-          <aside className="space-y-4"><div className="rounded-[${theme.radius}] border p-5" style={{ background: '${theme.surface}', borderColor: '${theme.muted}22' }}><div className="text-xs font-bold" style={{ color: '${theme.muted}' }}>{zh ? '本周使用量' : 'Usage this week'}</div><div className="mt-2 text-3xl font-black">68%</div><div className="mt-3 h-2 overflow-hidden rounded-full" style={{ background: '${theme.muted}22' }}><div className="h-full w-[68%]" style={{ background: '${theme.accent}' }}/></div></div><div className="rounded-[${theme.radius}] border p-5" style={{ background: '${theme.surface}', borderColor: '${theme.muted}22' }}><h3 className="text-sm font-black">{zh ? '产品已具备' : 'Product foundation'}</h3><ul className="mt-4 space-y-3 text-xs" style={{ color: '${theme.muted}' }}>{['✓ Clerk Auth', '✓ Stripe Payments', '✓ Supabase Database', '✓ SEO & i18n'].map((item) => <li key={item}>{item}</li>)}</ul></div></aside></div>
+          <aside className="space-y-4"><div className="rounded-[${theme.radius}] border p-5" style={{ background: '${theme.surface}', borderColor: '${theme.muted}22' }}><div className="text-xs font-bold" style={{ color: '${theme.muted}' }}>{zh ? '本周使用量' : 'Usage this week'}</div><div className="mt-2 text-3xl font-black">68%</div><div className="mt-3 h-2 overflow-hidden rounded-full" style={{ background: '${theme.muted}22' }}><div className="h-full w-[68%]" style={{ background: '${theme.accent}' }}/></div></div><div className="rounded-[${theme.radius}] border p-5" style={{ background: '${theme.surface}', borderColor: '${theme.muted}22' }}><h3 className="text-sm font-black">{zh ? '产品已具备' : 'Product foundation'}</h3><ul className="mt-4 space-y-3 text-xs" style={{ color: '${theme.muted}' }}>{['✓ Supabase Auth', '✓ Stripe Payments', '✓ Supabase Database', '✓ SEO & i18n'].map((item) => <li key={item}>{item}</li>)}</ul></div></aside></div>
       </div></section>
     </div>
   </main>;
@@ -153,7 +154,7 @@ export async function runManagedAI(input: { projectId?: string; capability: Mana
 
 function managedAIProxyRoute() {
   return `export const runtime = 'nodejs';
-export const maxDuration = 300;
+export const maxDuration = 60;
 
 export async function POST(request: Request) {
   const gateway = process.env.NOWBUILD_AI_GATEWAY_URL;
@@ -166,48 +167,222 @@ export async function POST(request: Request) {
 }`;
 }
 
+function managedMCPClient(resources?: ProjectResources) {
+  const servers = normalizeProjectResources(resources).mcpServers
+    .filter((item) => item.enabled && !item.setupRequired)
+    .map((item) => ({ id: item.id, name: item.name, endpoint: item.endpoint, transport: item.transport, auth: item.auth, envVars: item.envVars, tools: item.tools }));
+  return `import 'server-only';
+
+type MCPServer = { id: string; name: string; endpoint: string; transport: 'streamable-http' | 'sse'; auth: 'oauth' | 'bearer-env' | 'none' | 'provider-managed'; envVars: string[]; tools: string[] };
+type RPCResult = { result?: unknown; error?: { code?: number; message?: string; data?: unknown } };
+
+export const mcpServers = ${literal(servers)} as MCPServer[];
+
+function envPrefix(server: MCPServer) {
+  return 'NOWBUILD_MCP_' + server.name.toUpperCase().replace(/[^A-Z0-9]+/g, '_') + '_ACCESS_TOKEN';
+}
+
+function headersFor(server: MCPServer, sessionId?: string) {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    Accept: 'application/json, text/event-stream',
+    'MCP-Protocol-Version': '2025-06-18',
+  };
+  if (sessionId) headers['Mcp-Session-Id'] = sessionId;
+  const tokenEnv = server.auth === 'bearer-env' ? server.envVars[0] : envPrefix(server);
+  const token = tokenEnv ? process.env[tokenEnv] : undefined;
+  if (token) headers.Authorization = 'Bearer ' + token;
+  return headers;
+}
+
+async function responsePayload(response: Response): Promise<RPCResult> {
+  const text = await response.text();
+  if (!response.ok) throw new Error('MCP provider failed (' + response.status + '): ' + text.slice(0, 400));
+  const candidates = response.headers.get('content-type')?.includes('text/event-stream')
+    ? text.split('\\n').filter((line) => line.startsWith('data:')).map((line) => line.slice(5).trim()).filter(Boolean)
+    : [text];
+  for (const candidate of candidates.reverse()) {
+    try { return JSON.parse(candidate) as RPCResult; } catch { /* keep looking */ }
+  }
+  throw new Error('MCP provider returned an unreadable response');
+}
+
+async function rpc(server: MCPServer, method: string, params: Record<string, unknown>, id: number, sessionId?: string) {
+  const response = await fetch(server.endpoint, {
+    method: 'POST', headers: headersFor(server, sessionId), cache: 'no-store',
+    body: JSON.stringify({ jsonrpc: '2.0', id, method, params }), signal: AbortSignal.timeout(30_000),
+  });
+  return { payload: await responsePayload(response), sessionId: response.headers.get('mcp-session-id') || sessionId };
+}
+
+export async function callMCPTool(serverId: string, tool: string, args: Record<string, unknown>) {
+  const server = mcpServers.find((item) => item.id === serverId || item.name === serverId);
+  if (!server) throw new Error('MCP server is not configured');
+  if (server.tools.length && !server.tools.includes(tool)) throw new Error('MCP tool is not allowed for this project');
+  if (server.auth === 'bearer-env' && !server.envVars.some((name) => process.env[name])) throw new Error('MCP credential is not configured');
+  if (server.auth === 'oauth' && !process.env[envPrefix(server)]) throw new Error('MCP OAuth connection is required before this tool can run');
+
+  const initialized = await rpc(server, 'initialize', {
+    protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'nowbuild-generated-product', version: '1.0.0' },
+  }, 1);
+  if (initialized.payload.error) throw new Error(initialized.payload.error.message || 'MCP initialization failed');
+
+  await fetch(server.endpoint, {
+    method: 'POST', headers: headersFor(server, initialized.sessionId), cache: 'no-store',
+    body: JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized' }), signal: AbortSignal.timeout(30_000),
+  });
+  const called = await rpc(server, 'tools/call', { name: tool, arguments: args }, 2, initialized.sessionId);
+  if (called.payload.error) throw new Error(called.payload.error.message || 'MCP tool call failed');
+  return called.payload.result;
+}
+`;
+}
+
+function supabaseConfig() {
+  return `export function supabasePublicConfig() {
+  return {
+    url: (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim(),
+    key: (process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim(),
+  };
+}
+
+export function isSupabaseConfigured() {
+  const { url, key } = supabasePublicConfig();
+  return Boolean(url && key && !url.includes('xxxxx') && !key.includes('xxxxx'));
+}`;
+}
+
+function supabaseBrowserClient() {
+  return `'use client';
+
+import { createBrowserClient } from '@supabase/ssr';
+import { supabasePublicConfig } from './config';
+
+export function createBrowserSupabase() {
+  const { url, key } = supabasePublicConfig();
+  if (!url || !key) throw new Error('Supabase is not configured');
+  return createBrowserClient(url, key);
+}`;
+}
+
+function supabaseServerClient() {
+  return `import 'server-only';
+
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+import { supabasePublicConfig } from './config';
+
+export async function createServerSupabase() {
+  const { url, key } = supabasePublicConfig();
+  if (!url || !key) throw new Error('Supabase is not configured');
+  const store = await cookies();
+  return createServerClient(url, key, { cookies: {
+    getAll: () => store.getAll(),
+    setAll: (values) => {
+      try { values.forEach(({ name, value, options }) => store.set(name, value, options)); }
+      catch { /* Middleware owns cookie refresh when Server Components cannot write. */ }
+    },
+  } });
+}`;
+}
+
+function supabaseAuthForm() {
+  return `'use client';
+
+import { FormEvent, useState } from 'react';
+import { createBrowserSupabase } from '@/lib/supabase/client';
+import { isSupabaseConfigured } from '@/lib/supabase/config';
+
+export default function SupabaseAuthForm({ mode, locale, productName, setupUrl }: { mode: 'sign-in' | 'sign-up'; locale: 'zh' | 'en'; productName: string; setupUrl: string }) {
+  const zh = locale === 'zh';
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
+  const configured = isSupabaseConfigured();
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault(); setBusy(true); setError(''); setMessage('');
+    try {
+      const supabase = createBrowserSupabase();
+      const basePath = (window as Window & { __NOWBUILD_BASE_PATH__?: string }).__NOWBUILD_BASE_PATH__ || '';
+      if (mode === 'sign-in') {
+        const result = await supabase.auth.signInWithPassword({ email, password });
+        if (result.error) throw result.error;
+        window.location.href = basePath + '/' + locale + '/dashboard';
+      } else {
+        const redirect = window.location.origin + basePath + '/auth/confirm?next=' + encodeURIComponent('/' + locale + '/dashboard');
+        const result = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: redirect } });
+        if (result.error) throw result.error;
+        if (result.data.session) window.location.href = basePath + '/' + locale + '/dashboard';
+        else setMessage(zh ? '请打开邮箱完成验证。' : 'Check your inbox to confirm your email.');
+      }
+    } catch (cause) { setError(cause instanceof Error ? cause.message : (zh ? '请求失败' : 'Request failed')); }
+    finally { setBusy(false); }
+  }
+
+  if (!configured) return <main className="flex min-h-screen items-center justify-center bg-[#f6f7f9] p-6"><div className="w-full max-w-md rounded-2xl border border-black/10 bg-white p-8 text-center shadow-sm"><div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-black font-black text-white">{productName.slice(0, 1).toUpperCase()}</div><h1 className="mt-5 text-2xl font-black">{productName}</h1><p className="mt-3 text-sm leading-6 text-gray-500">{zh ? 'Supabase 登录已接入，配置项目 URL 和 Publishable Key 后即可测试。' : 'Supabase Auth is ready. Add the project URL and publishable key to test it.'}</p><a target="_top" href={setupUrl} className="mt-6 inline-flex rounded-xl bg-black px-5 py-3 text-sm font-bold text-white">{zh ? '返回 NowBuild 配置' : 'Configure in NowBuild'} →</a></div></main>;
+
+  return <main className="flex min-h-screen items-center justify-center bg-[#f6f7f9] p-6"><form onSubmit={submit} className="w-full max-w-md rounded-2xl border border-black/10 bg-white p-8 shadow-sm"><div className="text-xs font-bold uppercase tracking-wider text-black/35">{productName}</div><h1 className="mt-3 text-2xl font-black">{mode === 'sign-in' ? (zh ? '登录' : 'Sign in') : (zh ? '创建账户' : 'Create account')}</h1><label className="mt-6 block text-sm font-bold">{zh ? '邮箱' : 'Email'}<input required type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} className="mt-2 w-full rounded-xl border border-black/10 px-4 py-3 font-normal outline-none focus:border-black" /></label><label className="mt-4 block text-sm font-bold">{zh ? '密码' : 'Password'}<input required minLength={8} type="password" autoComplete={mode === 'sign-in' ? 'current-password' : 'new-password'} value={password} onChange={(event) => setPassword(event.target.value)} className="mt-2 w-full rounded-xl border border-black/10 px-4 py-3 font-normal outline-none focus:border-black" /></label>{error && <p role="alert" className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}{message && <p role="status" className="mt-4 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800">{message}</p>}<button disabled={busy} className="mt-6 w-full rounded-xl bg-black px-4 py-3 text-sm font-bold text-white disabled:opacity-40">{busy ? (zh ? '处理中…' : 'Working…') : mode === 'sign-in' ? (zh ? '登录' : 'Sign in') : (zh ? '注册' : 'Sign up')}</button><a href={'/' + locale + '/' + (mode === 'sign-in' ? 'sign-up' : 'sign-in')} className="mt-5 block text-center text-sm text-black/50 underline">{mode === 'sign-in' ? (zh ? '创建账户' : 'Create account') : (zh ? '已有账户，去登录' : 'Already have an account')}</a></form></main>;
+}`;
+}
+
+function supabaseAuthConfirmRoute() {
+  return `import { NextRequest, NextResponse } from 'next/server';
+import { createServerSupabase } from '@/lib/supabase/server';
+
+export async function GET(request: NextRequest) {
+  const url = new URL(request.url);
+  const code = url.searchParams.get('code');
+  const next = url.searchParams.get('next');
+  const destination = next && next.startsWith('/') && !next.startsWith('//') ? next : '/en/dashboard';
+  const basePath = process.env.NOWBUILD_PREVIEW_BASE_PATH || '';
+  if (code) {
+    const supabase = await createServerSupabase();
+    const result = await supabase.auth.exchangeCodeForSession(code);
+    if (!result.error) return NextResponse.redirect(new URL(basePath + destination, url.origin));
+  }
+  return NextResponse.redirect(new URL(basePath + '/en/sign-in?error=confirmation_failed', url.origin));
+}`;
+}
+
 function dashboardPage() {
   return `import { redirect } from 'next/navigation';
 import ProductWorkspace from '@/components/generated/ProductWorkspace';
+import { isSupabaseConfigured } from '@/lib/supabase/config';
+import { createServerSupabase } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
 export default async function DashboardPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
-  const clerkKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
-  if (clerkKey && !clerkKey.includes('xxxxx')) {
-    const { auth } = await import('@clerk/nextjs/server');
-    const { userId } = await auth();
-    if (!userId) redirect('/' + locale + '/sign-in');
+  if (isSupabaseConfigured()) {
+    const supabase = await createServerSupabase();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) redirect('/' + locale + '/sign-in');
   }
   return <ProductWorkspace locale={locale} />;
 }`;
 }
 
 function authPage(mode: 'sign-in' | 'sign-up', brief: ProjectBrief, projectId: string) {
-  const component = mode === 'sign-in' ? 'SignIn' : 'SignUp';
-  const title = mode === 'sign-in' ? '登录' : '创建账户';
-  return `/* eslint-disable @next/next/no-html-link-for-pages */
-export default async function AuthPage() {
-  const key = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
-  if (!key || key.includes('xxxxx')) {
-    return <main className="flex min-h-screen items-center justify-center bg-[#f6f7f9] p-6"><div className="w-full max-w-md rounded-2xl border border-black/10 bg-white p-8 text-center shadow-sm"><div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-black font-black text-white">${brief.name.slice(0, 1).toUpperCase()}</div><h1 className="mt-5 text-2xl font-black">${title} ${brief.name.replace(/</g, '')}</h1><p className="mt-3 text-sm leading-6 text-gray-500">登录功能已经接入，但这个项目还没有配置自己的 Clerk 测试 Key。预览不会借用 NowBuild 的账号，也不会显示报错页面。</p><a target="_top" href="/zh/dashboard?project=${projectId}" className="mt-6 inline-flex rounded-xl bg-black px-5 py-3 text-sm font-bold text-white">返回 NowBuild 配置登录 →</a><p className="mt-4 text-xs leading-5 text-gray-400">配置并重新构建后，即可测试真实注册、登录和受保护页面。</p></div></main>;
-  }
-  const { ${component} } = await import('@clerk/nextjs');
-  return <main className="flex min-h-screen items-center justify-center bg-[#f6f7f9] p-6"><${component} /></main>;
+  return `import SupabaseAuthForm from '@/components/auth/SupabaseAuthForm';
+
+export default async function AuthPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  return <SupabaseAuthForm mode="${mode}" locale={locale === 'zh' ? 'zh' : 'en'} productName=${literal(brief.name)} setupUrl="/zh/dashboard?project=${projectId}" />;
 }`;
 }
 
 function localeLayout(brief: ProjectBrief, plan?: ProjectPlan) {
   return `import type { ReactNode } from 'react';
 import type { Metadata } from 'next';
-import { ClerkProvider } from '@clerk/nextjs';
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { getMessages, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 
-const clerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.includes('xxxxx'));
 export const metadata: Metadata = { title: { default: ${literal(plan?.seo.title || brief.name)}, template: '%s | ${brief.name.replace(/'/g, '')}' }, description: ${literal(plan?.seo.description || brief.idea)} };
 export function generateStaticParams() { return routing.locales.map((locale) => ({ locale })); }
 
@@ -217,21 +392,22 @@ export default async function LocaleLayout({ children, params }: { children: Rea
   setRequestLocale(locale);
   const messages = await getMessages();
   const content = <NextIntlClientProvider messages={messages}>{children}</NextIntlClientProvider>;
-  return <div className="min-h-screen bg-white antialiased">{clerkConfigured ? <ClerkProvider>{content}</ClerkProvider> : content}</div>;
+  return <div className="min-h-screen bg-white antialiased">{content}</div>;
 }`;
 }
 
 function middleware() {
-  return `import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+  return `import { createServerClient } from '@supabase/ssr';
 import createMiddleware from 'next-intl/middleware';
 import { NextRequest, NextResponse } from 'next/server';
 import { routing } from '@/i18n/routing';
+import { isSupabaseConfigured, supabasePublicConfig } from '@/lib/supabase/config';
 
 const handleI18n = createMiddleware(routing);
-const protectedRoute = createRouteMatcher(['/:locale/dashboard(.*)', '/dashboard(.*)']);
+const protectedRoute = (pathname: string) => routing.locales.some((locale) => pathname.startsWith('/' + locale + '/dashboard')) || pathname.startsWith('/dashboard');
 async function handleRouting(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
-  if (pathname.startsWith('/api')) return NextResponse.next();
+  if (pathname.startsWith('/api') || pathname.startsWith('/auth/')) return NextResponse.next();
   const hasLocale = routing.locales.some((locale) => pathname === '/' + locale || pathname.startsWith('/' + locale + '/'));
   if (!hasLocale && pathname !== '/' && !/\\.[^/]+$/.test(pathname)) {
     const url = request.nextUrl.clone(); url.pathname = '/' + routing.defaultLocale + pathname; url.search = search;
@@ -239,13 +415,34 @@ async function handleRouting(request: NextRequest) {
   }
   return handleI18n(request);
 }
-const key = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
-const configured = Boolean(key && !key.includes('xxxxx'));
-export default configured ? clerkMiddleware(async (auth, request) => {
-  if (protectedRoute(request)) await auth.protect();
-  return handleRouting(request);
-}) : handleRouting;
-export const config = { matcher: ['/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|zip|webmanifest)).*)', '/(api|trpc)(.*)'] };`;
+export default async function middleware(request: NextRequest) {
+  let authResponse = NextResponse.next({ request });
+  let user = null;
+  if (isSupabaseConfigured()) {
+    const { url, key } = supabasePublicConfig();
+    const supabase = createServerClient(url, key, { cookies: {
+      getAll: () => request.cookies.getAll(),
+      setAll: (values) => {
+        values.forEach(({ name, value }) => request.cookies.set(name, value));
+        authResponse = NextResponse.next({ request });
+        values.forEach(({ name, value, options }) => authResponse.cookies.set(name, value, options));
+      },
+    } });
+    user = (await supabase.auth.getUser()).data.user;
+  }
+  if (isSupabaseConfigured() && protectedRoute(request.nextUrl.pathname) && !user) {
+    const locale = routing.locales.find((item) => request.nextUrl.pathname.startsWith('/' + item + '/')) || routing.defaultLocale;
+    const url = new URL('/' + locale + '/sign-in', request.url);
+    url.searchParams.set('redirect_url', request.nextUrl.pathname + request.nextUrl.search);
+    const redirect = NextResponse.redirect(url);
+    authResponse.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
+    return redirect;
+  }
+  const routed = await handleRouting(request);
+  authResponse.cookies.getAll().forEach((cookie) => routed.cookies.set(cookie));
+  return routed;
+}
+export const config = { runtime: 'nodejs', matcher: ['/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|zip|webmanifest)).*)', '/(api|trpc)(.*)'] };`;
 }
 
 function nextConfig() {
@@ -261,6 +458,20 @@ const nextConfig = {
   ] }]
 };
 export default withNextIntl(nextConfig);`;
+}
+
+export async function syncProjectResources(cwd: string, resources?: ProjectResources) {
+  await writeFile(join(cwd, 'src', 'lib', 'nowbuild-mcp.ts'), managedMCPClient(resources));
+  const manifestPath = join(cwd, 'NOWBUILD_PROJECT.json');
+  try {
+    const manifest = JSON.parse(await readFile(manifestPath, 'utf8')) as Record<string, unknown>;
+    const foundation = Array.isArray(manifest.foundation) ? manifest.foundation.map(String) : [];
+    manifest.resources = resourcesForAgent(resources);
+    manifest.foundation = Array.from(new Set([...foundation, 'nowbuild-mcp']));
+    await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  } catch {
+    // The initial scaffold writes the complete manifest immediately afterwards.
+  }
 }
 
 async function rebrandMessages(cwd: string, brief: ProjectBrief) {
@@ -306,22 +517,34 @@ async function rebrandMessages(cwd: string, brief: ProjectBrief) {
   }
 }
 
-export async function applySaasKitScaffold(cwd: string, projectId: string, brief: ProjectBrief, plan?: ProjectPlan) {
+export async function applySaasKitScaffold(cwd: string, projectId: string, brief: ProjectBrief, plan?: ProjectPlan, resources?: ProjectResources) {
   const generatedDir = join(cwd, 'src', 'components', 'generated');
+  const authComponentDir = join(cwd, 'src', 'components', 'auth');
+  const supabaseLibDir = join(cwd, 'src', 'lib', 'supabase');
+  const authConfirmDir = join(cwd, 'src', 'app', 'auth', 'confirm');
   const managedAIRouteDir = join(cwd, 'src', 'app', 'api', 'nowbuild-ai');
   await mkdir(generatedDir, { recursive: true });
+  await mkdir(authComponentDir, { recursive: true });
+  await mkdir(supabaseLibDir, { recursive: true });
+  await mkdir(authConfirmDir, { recursive: true });
   await mkdir(managedAIRouteDir, { recursive: true });
   await writeFile(join(cwd, 'src', 'app', '[locale]', 'page.tsx'), landingPage(brief, plan));
   await writeFile(join(cwd, 'src', 'app', '[locale]', 'layout.tsx'), localeLayout(brief, plan));
   await writeFile(join(generatedDir, 'ProductWorkspace.tsx'), productComponent(brief, projectId, plan));
+  await writeFile(join(authComponentDir, 'SupabaseAuthForm.tsx'), supabaseAuthForm());
+  await writeFile(join(supabaseLibDir, 'config.ts'), supabaseConfig());
+  await writeFile(join(supabaseLibDir, 'client.ts'), supabaseBrowserClient());
+  await writeFile(join(supabaseLibDir, 'server.ts'), supabaseServerClient());
+  await writeFile(join(authConfirmDir, 'route.ts'), supabaseAuthConfirmRoute());
   await writeFile(join(cwd, 'src', 'lib', 'nowbuild-ai.ts'), managedAIClient());
+  await syncProjectResources(cwd, resources);
   await writeFile(join(managedAIRouteDir, 'route.ts'), managedAIProxyRoute());
   await writeFile(join(cwd, 'src', 'app', '[locale]', 'dashboard', 'page.tsx'), dashboardPage());
   await writeFile(join(cwd, 'src', 'app', '[locale]', 'sign-in', '[[...sign-in]]', 'page.tsx'), authPage('sign-in', brief, projectId));
   await writeFile(join(cwd, 'src', 'app', '[locale]', 'sign-up', '[[...sign-up]]', 'page.tsx'), authPage('sign-up', brief, projectId));
   await writeFile(join(cwd, 'src', 'middleware.ts'), middleware());
   await writeFile(join(cwd, 'next.config.mjs'), nextConfig());
-  await writeFile(join(cwd, 'NOWBUILD_PROJECT.json'), `${JSON.stringify({ projectId, generatedAt: new Date().toISOString(), brief, plan, foundation: ['clerk', 'stripe', 'supabase', 'next-intl', 'seo', 'nowbuild-managed-ai'] }, null, 2)}\n`);
+  await writeFile(join(cwd, 'NOWBUILD_PROJECT.json'), `${JSON.stringify({ projectId, generatedAt: new Date().toISOString(), brief, plan, resources: resourcesForAgent(resources), foundation: ['supabase-auth', 'stripe', 'supabase-database', 'next-intl', 'seo', 'nowbuild-managed-ai', 'nowbuild-mcp'] }, null, 2)}\n`);
   await rebrandMessages(cwd, brief);
   return [
     'src/app/[locale]/page.tsx',
@@ -329,9 +552,14 @@ export async function applySaasKitScaffold(cwd: string, projectId: string, brief
     'src/app/[locale]/dashboard/page.tsx',
     'src/components/generated/ProductWorkspace.tsx',
     'src/lib/nowbuild-ai.ts',
+    'src/lib/nowbuild-mcp.ts',
     'src/app/api/nowbuild-ai/route.ts',
     'src/app/[locale]/pricing/page.tsx',
     'src/app/[locale]/sign-in/[[...sign-in]]/page.tsx',
+    'src/app/[locale]/sign-up/[[...sign-up]]/page.tsx',
+    'src/app/auth/confirm/route.ts',
+    'src/components/auth/SupabaseAuthForm.tsx',
+    'src/lib/supabase/server.ts',
     'src/app/api/create-checkout-session/route.ts',
     'src/app/api/webhooks/stripe/route.ts',
     'supabase/schema.sql',

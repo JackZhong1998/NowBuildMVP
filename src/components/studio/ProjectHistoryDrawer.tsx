@@ -14,12 +14,28 @@ const statusCopy = {
 export default function ProjectHistoryDrawer({ open, locale, activeId, onClose }: { open: boolean; locale: string; activeId?: string; onClose: () => void }) {
   const [projects, setProjects] = useState<ProjectSession[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     if (!open) return;
+    const controller = new AbortController();
     setLoading(true);
-    fetch('/api/projects').then((response) => response.json()).then((data) => setProjects(data.projects || [])).finally(() => setLoading(false));
-  }, [open]);
+    setError('');
+    fetch('/api/projects', { signal: controller.signal })
+      .then(async (response) => {
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Unable to load projects');
+        setProjects(data.projects || []);
+      })
+      .catch((cause) => {
+        if (!controller.signal.aborted) setError(cause instanceof Error ? cause.message : 'Unable to load projects');
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
+    return () => controller.abort();
+  }, [open, reloadKey]);
 
   if (!open) return null;
   return <div className="fixed inset-0 z-50 bg-black/20 backdrop-blur-[2px]" onClick={onClose}>
@@ -28,6 +44,7 @@ export default function ProjectHistoryDrawer({ open, locale, activeId, onClose }
       <a href={`/${locale}/dashboard`} className="mt-5 flex items-center justify-center rounded-xl bg-[#171816] px-4 py-3 text-sm font-bold text-white">＋ 创建新产品</a>
       <div className="mt-5 space-y-2">
         {loading && <div className="space-y-2">{[1, 2, 3].map((item) => <div key={item} className="h-24 animate-pulse rounded-2xl bg-black/[.04]" />)}</div>}
+        {!loading && error && <div role="alert" className="rounded-2xl border border-red-200 bg-red-50 p-4 text-xs leading-5 text-red-700"><div>{error}</div><button onClick={() => setReloadKey((value) => value + 1)} className="mt-3 rounded-lg border border-red-200 bg-white px-3 py-2 font-bold">{locale === 'zh' ? '重新加载' : 'Retry'}</button></div>}
         {!loading && projects.map((item) => {
           const [label, progress, color] = statusCopy[item.status];
           return <a key={item.id} href={`/${locale}/dashboard?project=${item.id}`} className={`block rounded-2xl border p-4 transition hover:bg-white ${activeId === item.id ? 'border-[#6d5dfc] bg-white shadow-sm' : 'border-black/7 bg-white/60'}`}>

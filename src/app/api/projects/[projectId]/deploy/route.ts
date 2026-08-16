@@ -22,6 +22,20 @@ export async function POST(_: Request, { params }: { params: Promise<{ projectId
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const project = await getProjectSession(projectId, userId);
   if (!project || project.isExample || !project.result) return NextResponse.json({ error: 'Build the project before publishing' }, { status: 400 });
+  if (project.testing?.status !== 'passed') return NextResponse.json({ error: '请先完成核心流程测试，再发布产品' }, { status: 400 });
+  const environment = await projectEnvironmentStatus(projectId);
+  const missing = [
+    !environment.supabaseReady && 'Supabase',
+    !environment.paymentsReady && 'Stripe',
+    !environment.deployReady && 'Vercel',
+  ].filter(Boolean);
+  if (missing.length) return NextResponse.json({ error: `发布前请完成配置：${missing.join('、')}` }, { status: 400 });
+  const isFinalEnvironmentSync = Boolean(
+    project.deployment?.url
+    && environment.paymentsProductionReady
+    && project.launch?.supabaseRedirectConfirmed
+    && project.launch?.stripeWebhookConfirmed
+  );
   project.deployment = { status: 'uploading', provider: 'vercel', updatedAt: new Date().toISOString() };
   await saveProjectSession(project);
   try {
@@ -29,6 +43,11 @@ export async function POST(_: Request, { params }: { params: Promise<{ projectId
     await saveProjectSession(project);
     const result = await deployProjectToVercel(projectId, project.title, userId);
     project.deployment = { status: 'ready', provider: 'vercel', url: result.url, deploymentId: result.id, updatedAt: new Date().toISOString() };
+    project.launch = {
+      ...project.launch,
+      productionEnvironmentSynced: isFinalEnvironmentSync,
+      updatedAt: new Date().toISOString(),
+    };
     project.messages.push({ id: randomUUID(), role: 'assistant', kind: 'result', createdAt: new Date().toISOString(), content: `产品已发布：${result.url}` });
     await saveProjectSession(project);
     return NextResponse.json({ project, deployment: project.deployment });

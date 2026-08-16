@@ -6,7 +6,7 @@ import { ensureProjectWorkspace } from '@/lib/nowbuild/workspace';
 
 describe('generated SaaS project', () => {
   it('creates real full-site source on top of the SaaS kit', async () => {
-    const projectId = 'test-real-saas-project';
+    const projectId = 'test-supabase-auth-saas-project';
     const cwd = await ensureProjectWorkspace(projectId);
     await applySaasKitScaffold(cwd, projectId, {
       name: 'ProofPilot',
@@ -21,6 +21,11 @@ describe('generated SaaS project', () => {
     const workspace = await readFile(resolve(cwd, 'src/components/generated/ProductWorkspace.tsx'), 'utf8');
     const aiClient = await readFile(resolve(cwd, 'src/lib/nowbuild-ai.ts'), 'utf8');
     const aiRoute = await readFile(resolve(cwd, 'src/app/api/nowbuild-ai/route.ts'), 'utf8');
+    const mcpClient = await readFile(resolve(cwd, 'src/lib/nowbuild-mcp.ts'), 'utf8');
+    const middleware = await readFile(resolve(cwd, 'src/middleware.ts'), 'utf8');
+    const authForm = await readFile(resolve(cwd, 'src/components/auth/SupabaseAuthForm.tsx'), 'utf8');
+    const authServer = await readFile(resolve(cwd, 'src/lib/supabase/server.ts'), 'utf8');
+    const manifest = await readFile(resolve(cwd, 'NOWBUILD_PROJECT.json'), 'utf8');
     await expect(stat(resolve(cwd, 'src/app/api/create-checkout-session/route.ts'))).resolves.toBeTruthy();
     await expect(stat(resolve(cwd, 'src/app/api/webhooks/stripe/route.ts'))).resolves.toBeTruthy();
     await expect(stat(resolve(cwd, 'supabase/schema.sql'))).resolves.toBeTruthy();
@@ -28,11 +33,23 @@ describe('generated SaaS project', () => {
     expect(homepage).toContain('lg:grid-cols');
     expect(workspace).toContain("'use client'");
     expect(workspace).toContain('function run()');
-    expect(workspace).toContain('Clerk Auth');
+    expect(workspace).toContain('Supabase Auth');
     expect(workspace).toContain('Stripe Payments');
     expect(workspace).toContain('runManagedAI');
     expect(aiClient).toContain("fetch('/api/nowbuild-ai'");
     expect(aiRoute).toContain('NOWBUILD_AI_GATEWAY_TOKEN');
+    expect(aiRoute).toContain('export const maxDuration = 60');
     expect(aiClient).not.toContain('OPENROUTER_API_KEY');
+    expect(mcpClient).toContain('callMCPTool');
+    expect(mcpClient).toContain("'tools/call'");
+    expect(authForm).toContain('signInWithPassword');
+    expect(authForm).toContain('signUp');
+    expect(authForm).toContain('__NOWBUILD_BASE_PATH__');
+    expect(authForm).toContain('Supabase 登录已接入');
+    expect(authServer).toContain('createServerClient');
+    expect(manifest).toContain('supabase-auth');
+    expect(manifest).not.toContain('clerk');
+    expect(middleware).toContain("runtime: 'nodejs'");
+    expect(middleware).toContain('supabase.auth.getUser');
   });
 });

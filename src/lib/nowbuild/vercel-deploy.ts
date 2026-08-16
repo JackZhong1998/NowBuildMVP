@@ -66,7 +66,8 @@ export async function deployProjectToVercel(projectId: string, name: string, use
     })));
   }
 
-  const runtimeEnv = Object.fromEntries(Object.entries(values).filter(([key]) => !key.startsWith('VERCEL_')));
+  const managementOnly = new Set(['VERCEL_TOKEN', 'VERCEL_TEAM_ID', 'SUPABASE_PROJECT_REF', 'SUPABASE_ACCESS_TOKEN']);
+  const runtimeEnv = Object.fromEntries(Object.entries(values).filter(([key]) => !managementOnly.has(key)));
   const publicGateway = process.env.NOWBUILD_PUBLIC_URL?.trim();
   if (publicGateway?.startsWith('https://') && process.env.OPENROUTER_API_KEY) {
     runtimeEnv.NOWBUILD_AI_GATEWAY_URL = new URL('/api/ai/generate', publicGateway).toString();

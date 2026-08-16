@@ -34,7 +34,7 @@ export default function Hero() {
           <div className="inline-flex items-center gap-2 rounded-full border border-[#d6ff5f]/30 bg-[#d6ff5f]/8 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.14em] text-[#d6ff5f]"><span>01</span><span className="h-px w-5 bg-current/40"/>{zh ? '从自然语言到完整产品' : 'Natural language to a complete product'}</div>
           <h1 className="mt-7 max-w-4xl text-[clamp(3.4rem,7.4vw,7.8rem)] font-black leading-[.82] tracking-[-.075em]"><span className="block">{zh ? '把想法' : 'Turn the idea'}</span><span className="block text-[#d6ff5f]">{zh ? '变成生意。' : 'into business.'}</span></h1>
           <p className="mt-8 max-w-xl text-base leading-7 text-white/58 sm:text-lg">{zh ? '先把模糊需求聊成 PRD，选定真正可执行的视觉系统，再基于完整 SaaS Kit 编码、构建和测试。你拿到的是能登录、收款、迭代的 MVP。' : 'Turn a rough idea into a PRD, choose an executable visual system, then build and test it on a complete SaaS Kit. Ship an MVP that can authenticate, charge, and evolve.'}</p>
-          <div className="mt-9 flex flex-wrap gap-x-7 gap-y-3 text-[10px] font-bold uppercase tracking-[.13em] text-white/38">{['Clerk auth', 'Stripe payments', 'Supabase', 'SEO + i18n'].map((item) => <span key={item} className="flex items-center gap-2"><i className="h-1 w-1 rounded-full bg-[#ff8a64]"/>{item}</span>)}</div>
+          <div className="mt-9 flex flex-wrap gap-x-7 gap-y-3 text-[10px] font-bold uppercase tracking-[.13em] text-white/38">{['Supabase auth', 'Stripe payments', 'Supabase database', 'SEO + i18n'].map((item) => <span key={item} className="flex items-center gap-2"><i className="h-1 w-1 rounded-full bg-[#ff8a64]"/>{item}</span>)}</div>
         </div>
 
         <div className="relative lg:pb-3">

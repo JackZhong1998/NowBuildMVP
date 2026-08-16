@@ -2,7 +2,7 @@
   "Metadata": {
     "home": {
       "title": "NowBuild — 开源 Next.js SaaS 启动框架",
-      "description": "用集成 Clerk、Stripe、Supabase 与国际化的 Next.js SaaS 基础代码，更快完成从创意到可验证产品的第一步。"
+      "description": "用集成 Supabase 认证与数据库、Stripe 与国际化的 Next.js SaaS 基础代码，更快完成从创意到可验证产品的第一步。"
     },
     "blog": {
       "title": "博客 — NowBuild 的洞察与更新",
@@ -59,7 +59,7 @@
     },
     "rows": {
       "auth": "认证与单点登录",
-      "authSaas": "内置 (Clerk)",
+      "authSaas": "内置 (Supabase Auth)",
       "authDiy": "数周工作量",
       "authOthers": "部分支持",
       "payments": "支付集成",
@@ -94,7 +94,7 @@
     "items": [
       {
         "title": "安全认证",
-        "description": "企业级 Clerk 认证。社交登录、多因素认证、会话管理和用户资料 — 开箱即用。"
+        "description": "生成项目已接入 Supabase Auth：邮箱注册、会话校验、受保护路由，以及可直接关联数据库的用户 ID。"
       },
       {
         "title": "Stripe 支付",
@@ -124,7 +124,7 @@
     "items": [
       {
         "question": "什么是 NowBuild？",
-        "answer": "NowBuild 是一个开源 Next.js SaaS 启动框架，预先集成 Clerk、Stripe、Supabase、国际化与 SEO 基础。它提供可运行的起点，帮助你把精力集中在自己的业务功能上。"
+        "answer": "NowBuild 是一个开源 Next.js SaaS 启动框架，预先集成 Supabase 认证与数据库、Stripe、国际化与 SEO 基础。它提供可运行的起点，帮助你把精力集中在自己的业务功能上。"
       },
       {
         "question": "使用 NowBuild 需要了解 Next.js 吗？",
@@ -245,7 +245,7 @@
         "date": "2026-03-15",
         "author": "NowBuild 团队",
         "readTime": "8",
-        "content": "NowBuild 旨在帮助开发者快速启动 SaaS 产品，同时不牺牲质量或可扩展性。在本指南中，我们将完整介绍设置过程。\n\n## 前置条件\n\n在开始之前，请确保已安装 Node.js 18+，并在 Clerk、Stripe 和 Supabase 上注册了账户。\n\n## 步骤 1：克隆并安装\n\n克隆 NowBuild 仓库，使用 npm 或 yarn 安装依赖。\n\n## 步骤 2：配置环境\n\n复制 .env.example 文件，填入 Clerk、Stripe 和 Supabase 的 API 密钥。\n\n## 步骤 3：自定义您的品牌\n\n更新翻译文件中的主题颜色、标志和内容以匹配您的品牌。\n\n## 步骤 4：部署到 Vercel\n\n将仓库连接到 Vercel，一键部署。NowBuild 针对 Vercel 平台进行了优化。\n\n## 下一步？\n\n探索文档以了解 Webhook、自定义数据库模式和分析集成等高级功能。"
+        "content": "NowBuild 旨在帮助开发者快速启动 SaaS 产品，同时不牺牲质量或可扩展性。在本指南中，我们将完整介绍设置过程。\n\n## 前置条件\n\n在开始之前，请确保已安装 Node.js 18+，并在 Supabase 和 Stripe 上注册了账户。\n\n## 步骤 1：克隆并安装\n\n克隆 NowBuild 仓库，使用 npm 或 yarn 安装依赖。\n\n## 步骤 2：配置环境\n\n复制 .env.example 文件，填入 Supabase 和 Stripe 的 API 密钥。\n\n## 步骤 3：自定义您的品牌\n\n更新翻译文件中的主题颜色、标志和内容以匹配您的品牌。\n\n## 步骤 4：部署到 Vercel\n\n将仓库连接到 Vercel，一键部署。NowBuild 针对 Vercel 平台进行了优化。\n\n## 下一步？\n\n探索文档以了解 Webhook、自定义数据库模式和分析集成等高级功能。"
       },
       {
         "slug": "why-seo-matters-for-saas",
@@ -311,7 +311,7 @@
       },
       {
         "title": "4. 信息共享",
-        "content": "我们不会出售您的个人信息。我们可能在以下情况下共享您的信息：\n\n• **服务提供商**：我们与代表我们执行服务的第三方服务提供商共享信息，包括支付处理（Stripe）、认证（Clerk）和数据存储（Supabase）。\n• **法律要求**：如果法律要求或回应公共机构的有效请求，我们可能会披露您的信息。\n• **业务转让**：与任何合并、公司资产出售、融资或收购我们全部或部分业务有关的情况。\n• **经您同意**：经您同意或按您的指示，我们可能会共享您的信息。"
+        "content": "我们不会出售您的个人信息。我们可能在以下情况下共享您的信息：\n\n• **服务提供商**：我们与代表我们执行服务的第三方服务提供商共享信息，包括支付处理（Stripe）、认证（Supabase Auth）和数据存储（Supabase）。\n• **法律要求**：如果法律要求或回应公共机构的有效请求，我们可能会披露您的信息。\n• **业务转让**：与任何合并、公司资产出售、融资或收购我们全部或部分业务有关的情况。\n• **经您同意**：经您同意或按您的指示，我们可能会共享您的信息。"
       },
       {
         "title": "5. 数据安全",
